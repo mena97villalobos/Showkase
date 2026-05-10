@@ -1,0 +1,130 @@
+import com.android.build.gradle.AbstractAppExtension
+import com.android.build.gradle.LibraryExtension
+
+plugins {
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.paparazzi)
+    alias(libs.plugins.kotlin.compose)
+}
+
+if (project.hasProperty("useKsp")) {
+    apply(plugin = "com.google.devtools.ksp")
+} else {
+    apply(plugin = "org.jetbrains.kotlin.kapt")
+    extensions.configure<org.jetbrains.kotlin.gradle.plugin.KaptExtension> {
+        correctErrorTypes = true
+    }
+}
+
+android {
+    namespace = "com.airbnb.android.showkase.screenshot.testing.paparazzi"
+
+    defaultConfig {
+        minSdk = 21
+        compileSdk = 36
+        targetSdk = 33
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/gradle/incremental.annotation.processors",
+                "META-INF/*.kotlin_module",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+            )
+        }
+    }
+}
+
+// https://github.com/cashapp/paparazzi/issues/409
+tasks.withType<Test>().configureEach {
+    jvmArgs(
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    )
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+afterEvaluate {
+    /**
+     * KSP does not currently register kotlin generated sources.
+     * https://github.com/google/ksp/issues/37
+     */
+    fun registerKspSources(variantName: String, addToModel: (java.io.File) -> Unit) {
+        val outputFolder = file("build/generated/ksp/$variantName/kotlin")
+        addToModel(outputFolder)
+        android.sourceSets.getByName(variantName).java.srcDir(outputFolder)
+
+        // eg "debugUnitTest"
+        val testDirectoryName = "${variantName}UnitTest"
+        // eg "testDebug"
+        val testSourceSetName = "test${variantName.replaceFirstChar { it.uppercase() }}"
+
+        val testSourceSet = android.sourceSets.findByName(testSourceSetName) ?: return
+        val testOutputFolder = file("build/generated/ksp/$testDirectoryName/kotlin")
+        testSourceSet.withGroovyBuilder {
+            "kotlin" {
+                invokeMethod("srcDir", testOutputFolder)
+            }
+        }
+    }
+
+    val libraryExtension = extensions.findByType(LibraryExtension::class.java)
+    val appExtension = extensions.findByType(AbstractAppExtension::class.java)
+    when {
+        libraryExtension != null -> {
+            libraryExtension.libraryVariants.all {
+                registerKspSources(name) { addJavaSourceFoldersToModel(it) }
+            }
+        }
+        appExtension != null -> {
+            appExtension.applicationVariants.all {
+                registerKspSources(name) { addJavaSourceFoldersToModel(it) }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation(project(":showkase"))
+    if (project.hasProperty("useKsp")) {
+        add("ksp", project(":showkase-processor"))
+        add("kspAndroidTest", project(":showkase-processor"))
+        add("kspTest", project(":showkase-processor"))
+    } else {
+        add("kapt", project(":showkase-processor"))
+        add("kaptAndroidTest", project(":showkase-processor"))
+        add("kaptTest", project(":showkase-processor"))
+    }
+    api(project(":showkase-screenshot-testing"))
+
+    implementation(libs.compose.activityCompose)
+    implementation(libs.compose.composeRuntime)
+    implementation(libs.compose.constraintLayout)
+    implementation(libs.compose.core)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.tooling)
+    implementation(libs.compose.layout)
+    implementation(libs.compose.material)
+    implementation(libs.compose.savedInstanceState)
+    implementation(libs.compose.uiLiveData)
+
+    implementation(libs.imageLoading.picasso)
+
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.junitImplementation)
+    implementation(libs.test.testParameterInjector)
+    testImplementation(libs.compose.uiTest)
+    testImplementation(project(":showkase-screenshot-testing-paparazzi"))
+}
