@@ -1,17 +1,16 @@
 package com.airbnb.android.showkase.ui
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.material.Text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -21,20 +20,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.airbnb.android.showkase.models.ShowkaseBrowserComponent
 
-private val LightColors = lightColors()
-private val DarkColors = darkColors()
+private val LightColors = lightColorScheme()
+private val DarkColors = darkColorScheme()
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun SimpleTextCard(
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = padding4x, end = padding4x, top = padding2x, bottom = padding2x),
-        onClick = onClick
+            .padding(start = padding4x, end = padding4x, top = padding2x, bottom = padding2x)
+            .clickable(onClick = onClick),
     ) {
         Text(
             text = text,
@@ -42,8 +40,8 @@ internal fun SimpleTextCard(
             style = TextStyle(
                 fontSize = 20.sp,
                 fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.Bold
-            )
+                fontWeight = FontWeight.Bold,
+            ),
         )
     }
 }
@@ -54,13 +52,13 @@ internal fun ComponentCardTitle(componentName: String) {
         text = componentName,
         modifier = Modifier.padding(
             start = padding4x, end = padding4x, top = padding8x,
-            bottom = padding1x
+            bottom = padding1x,
         ),
         style = TextStyle(
             fontSize = 16.sp,
             fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.Bold
-        )
+            fontWeight = FontWeight.Bold,
+        ),
     )
 }
 
@@ -77,10 +75,10 @@ internal fun ComponentCard(
         val composableModifier = Modifier.generateComposableModifier(metadata)
         val composableContainerModifier = Modifier.generateContainerModifier(onClick)
         MaterialTheme(
-            colors = if (darkMode) DarkColors else LightColors
+            colorScheme = if (darkMode) DarkColors else LightColors,
         ) {
             Card(
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.large,
             ) {
                 Box {
                     Column(modifier = composableModifier) {
@@ -94,7 +92,7 @@ internal fun ComponentCard(
                     Column(
                         modifier = Modifier
                             .matchParentSize()
-                            .then(composableContainerModifier)
+                            .then(composableContainerModifier),
                     ) {}
                 }
             }

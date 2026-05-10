@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.tooling)
     implementation(libs.compose.layout)
-    implementation(libs.compose.material)
+    implementation(libs.compose.material3)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.googleTruth)

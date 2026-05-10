@@ -2,12 +2,12 @@ package com.airbnb.android.showkase.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Snackbar
+import androidx.compose.material3.Snackbar
 
 @Composable
 internal fun ShowkaseErrorScreen(errorText: String) {

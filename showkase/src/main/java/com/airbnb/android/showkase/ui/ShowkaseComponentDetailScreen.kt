@@ -18,11 +18,11 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ProvideTextStyle
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -137,10 +137,10 @@ private fun DocumentationPanel(kDoc: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        ProvideTextStyle(value = MaterialTheme.typography.button) {
+        CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.labelLarge) {
             Text(
                 text = buttonText,
-                color = MaterialTheme.colors.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         }
         Icon(imageVector = icon, contentDescription = buttonText)

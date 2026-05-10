@@ -14,13 +14,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -153,7 +153,7 @@ internal fun ShowkaseAppBar(
     onClearSearch: () -> Unit,
 ) {
     Surface(
-        elevation = 4.dp
+        shadowElevation = 4.dp
     ) {
         Row(
             Modifier
@@ -350,7 +350,7 @@ internal fun ShowkaseSearchField(
                 Icon(imageVector = Icons.Filled.Search, contentDescription = "Search Icon")
             }
         },
-        colors = TextFieldDefaults.textFieldColors(),
+        colors = TextFieldDefaults.colors(),
         trailingIcon = {
             IconButton(
                 onClick = {
