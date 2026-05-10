@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,12 +81,13 @@ internal fun ShowkaseBrowserApp(
     ) {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+        val currentRoute by remember(navBackStackEntry) {
+            derivedStateOf { navBackStackEntry?.destination?.route }
+        }
         Surface(
             color = Color.White
         ) {
             Scaffold(
-                drawerContent = null,
                 topBar = {
                     ShowkaseAppBar(
                         currentRoute = currentRoute,
@@ -188,45 +190,6 @@ internal fun ShowkaseAppBar(
             )
         }
     }
-
-    /**
-     * Commented out due to TopAppBar not working properly in beta-01 for this use case. Seems to be
-     * related to use to Surface inside TopAppBar and a TextField. Creating my own implementation
-     * for now. Will uncomment if this issue gets fixed.
-     */
-//    TopAppBar(
-//        title = {
-//            ShowkaseAppBarTitle(
-//                isSearchActive =  showkaseBrowserScreenMetadata.isSearchActive,
-//                currentGroup = showkaseBrowserScreenMetadata.currentGroup,
-//                currentComponentName = showkaseBrowserScreenMetadata.currentComponentName,
-//                currentComponentStyleName = showkaseBrowserScreenMetadata.currentComponentStyleName,
-//                currentRoute = currentRoute,
-//                searchQuery = showkaseBrowserScreenMetadata.searchQuery,
-//                searchQueryValueChange = {
-//                    onSearchQueryChanged(it)
-//                },
-//                modifier = Modifier,
-//                onCloseSearchFieldClick = {
-//                    onCloseSearch()
-//                },
-//                onClearSearchField = {
-//                    onClearSearch()
-//                }
-//            )
-//        },
-//        actions = {
-//            ShowkaseAppBarActions(
-//                isActive = showkaseBrowserScreenMetadata.isSearchActive,
-//                onActionClicked = {
-//                    onActivateSearch()
-//                },
-//                currentRoute = currentRoute,
-//                modifier = Modifier
-//            )
-//        },
-//        backgroundColor = Color.White
-//    )
 }
 
 @Suppress("LongParameterList")
@@ -316,7 +279,7 @@ private fun AppBarTitle(
 }
 
 @Composable
-fun ToolbarTitle(
+private fun ToolbarTitle(
     string: String,
     modifier: Modifier
 ) {
@@ -441,11 +404,13 @@ internal fun ShowkaseBodyContent(
     onUpdateShowkaseBrowserScreenMetadata: (ShowkaseBrowserScreenMetadata) -> Unit,
     navigateTo: (ShowkaseCurrentScreen) -> Unit,
 ) {
-    val startDestination = startDestination(
-        groupedColorsMap,
-        groupedTypographyMap,
-        groupedComponentMap
-    )
+    val startDestination = remember(groupedColorsMap, groupedTypographyMap, groupedComponentMap) {
+        startDestination(
+            groupedColorsMap,
+            groupedTypographyMap,
+            groupedComponentMap,
+        )
+    }
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -463,7 +428,7 @@ internal fun ShowkaseBodyContent(
     )
 }
 
-private fun startDestination(
+internal fun startDestination(
     groupedColorsMap: Map<String, List<ShowkaseBrowserColor>>,
     groupedTypographyMap: Map<String, List<ShowkaseBrowserTypography>>,
     groupedComponentMap: Map<String, List<ShowkaseBrowserComponent>>
@@ -529,7 +494,7 @@ private fun NavGraphBuilder.navGraph(
         )
 }
 
-private fun Map<String, List<*>>.isOnlyCategory(
+internal fun Map<String, List<*>>.isOnlyCategory(
     otherCategoryMap1: Map<String, List<*>>,
     otherCategoryMap2: Map<String, List<*>>
 ) = this.values.isNotEmpty() && otherCategoryMap1.isEmpty() && otherCategoryMap2.isEmpty()

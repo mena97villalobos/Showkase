@@ -2,11 +2,9 @@
 
 package com.airbnb.android.showkase_processor_testing
 
-import com.airbnb.android.showkase.processor.ShowkaseProcessor
 import com.airbnb.android.showkase.processor.ShowkaseProcessorProvider
 import com.google.common.io.Resources
 import com.tschuchort.compiletesting.CompilationResult
-import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
@@ -27,58 +25,41 @@ abstract class BaseProcessorTest {
     @JvmField
     val testNameRule = TestNameRule()
 
-    enum class Mode {
-        KSP, KAPT
-    }
-
     /**
      * Collects the files in the "input" directory of this test's resources directory
      * and compiles them with Kotlin, returning the result.
      */
     @OptIn(ExperimentalCompilerApi::class)
     protected fun compileInputs(
-        modes: List<Mode> = listOf(Mode.KSP, Mode.KAPT),
         options: MutableMap<String, String> = mutableMapOf(),
-        onCompilation: (mode: Mode, compilation: KotlinCompilation, result: CompilationResult) -> Unit
+        onCompilation: (compilation: KotlinCompilation, result: CompilationResult) -> Unit
     ) {
         val testResourcesDir = getTestResourcesDirectory(getRootResourcesDir())
 
         val inputDir = File(testResourcesDir, "input")
         inputDir.mkdirs()
 
-        modes.forEach { mode ->
-            val compilation = KotlinCompilation().apply {
-                kotlincArguments = kotlincArguments + "-Xexplicit-api=strict"
-                sources = inputDir.listFiles()?.toList().orEmpty()
-                    .map { file -> SourceFile.new(file.name, file.readText()) }
-                when (mode) {
-                    Mode.KSP -> {
-                        languageVersion = "2.1"
-                        configureKsp(useKsp2 = true) {
-                            symbolProcessorProviders.add(ShowkaseProcessorProvider())
-                            processorOptions.putAll(options)
-                        }
-                    }
-
-                    Mode.KAPT -> {
-                        languageVersion = "1.9"
-                        annotationProcessors = listOf(ShowkaseProcessor())
-                        kaptArgs = options
-                    }
-                }
-                inheritClassPath = true
-                messageOutputStream = System.out // see diagnostics in real time
+        val compilation = KotlinCompilation().apply {
+            kotlincArguments = kotlincArguments + "-Xexplicit-api=strict"
+            sources = inputDir.listFiles()?.toList().orEmpty()
+                .map { file -> SourceFile.new(file.name, file.readText()) }
+            languageVersion = "2.1"
+            configureKsp(useKsp2 = true) {
+                symbolProcessorProviders.add(ShowkaseProcessorProvider())
+                processorOptions.putAll(options)
             }
-
-            val result = compilation.compile()
-
-            onCompilation(mode, compilation, result)
+            inheritClassPath = true
+            messageOutputStream = System.out // see diagnostics in real time
         }
+
+        val result = compilation.compile()
+
+        onCompilation(compilation, result)
     }
 
     @OptIn(ExperimentalCompilerApi::class)
     protected fun assertCompilationFails(errorMessage: String) {
-        compileInputs { _, _, result ->
+        compileInputs { _, result ->
             assertThat(result.exitCode)
                 .isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
 
@@ -89,11 +70,10 @@ abstract class BaseProcessorTest {
 
     @OptIn(ExperimentalCompilerApi::class)
     protected fun compileInputsAndVerifyOutputs(
-        modes: List<Mode> = listOf(Mode.KSP, Mode.KAPT),
         options: MutableMap<String, String> = mutableMapOf(),
     ) {
-        compileInputs(modes = modes, options = options) { mode, compilation, result ->
-            result.assertGeneratedSources(mode, compilation)
+        compileInputs(options = options) { compilation, result ->
+            result.assertGeneratedSources(compilation)
         }
     }
 
@@ -102,7 +82,7 @@ abstract class BaseProcessorTest {
      * and validates that they match the generated sources of this compilation result.
      */
     @OptIn(ExperimentalCompilerApi::class)
-    protected fun CompilationResult.assertGeneratedSources(mode: Mode, compilation: KotlinCompilation) {
+    protected fun CompilationResult.assertGeneratedSources(compilation: KotlinCompilation) {
         assertThat(exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
         val testResourcesDir = getTestResourcesDirectory(getRootResourcesDir())
@@ -113,10 +93,7 @@ abstract class BaseProcessorTest {
         }
         outputDir.mkdirs()
 
-        val generatedSources = when (mode) {
-            Mode.KSP -> compilation.kspSourcesDir.walk().filter { it.isFile }.toList()
-            Mode.KAPT -> (this as JvmCompilationResult).sourcesGeneratedByAnnotationProcessor
-        }
+        val generatedSources = compilation.kspSourcesDir.walk().filter { it.isFile }.toList()
 
         if (UPDATE_TEST_OUTPUTS) {
             generatedSources.forEach {

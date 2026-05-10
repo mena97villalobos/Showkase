@@ -1,6 +1,5 @@
 package com.airbnb.android.showkase.ui
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,6 +25,7 @@ internal fun ShowkaseCategoriesScreen(
     LazyColumn {
         items(
             items = categoryMetadataMap.entries.toList(),
+            key = { it.key.name },
             itemContent = { (category, categorySize) ->
                 val defaultLocale = Locale.getDefault()
                 val title = category.name
@@ -79,17 +79,11 @@ internal fun goBackToCategoriesScreen(
     onBackPressOnRoot: () -> Unit,
 ) {
     when {
-        showkaseBrowserScreenMetadata.isSearchActive -> {
-            Log.e("BackPressed", "isSearchActive")
+        showkaseBrowserScreenMetadata.isSearchActive ->
             onUpdateShowkaseBrowserScreenMetadata(showkaseBrowserScreenMetadata.clearActiveSearch())
-        }
-        onRootScreen -> {
-            Log.e("BackPressed", "onRootScreen")
-            onBackPressOnRoot()
-        }
+        onRootScreen -> onBackPressOnRoot()
         else -> {
-            Log.e("BackPressed", "else")
-            showkaseBrowserScreenMetadata.clear()
+            onUpdateShowkaseBrowserScreenMetadata(showkaseBrowserScreenMetadata.clear())
             onBackToCategories()
         }
     }

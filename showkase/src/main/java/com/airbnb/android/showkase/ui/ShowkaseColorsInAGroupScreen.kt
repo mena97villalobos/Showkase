@@ -54,7 +54,9 @@ internal fun ShowkaseColorsInAGroupScreen(
     LazyColumn(
         modifier = Modifier.testTag("ColorsInAGroupList")
     ) {
-        items(items = filteredList,
+        items(
+            items = filteredList,
+            key = { "${it.colorGroup}_${it.colorName}" },
             itemContent = { groupColorMetadata ->
                 Card(
                     modifier = Modifier.padding(

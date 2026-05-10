@@ -2,19 +2,7 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
-}
-
-if (project.hasProperty("useKsp")) {
-    apply(plugin = "com.google.devtools.ksp")
-} else {
-    apply(plugin = "org.jetbrains.kotlin.kapt")
-    extensions.configure<org.jetbrains.kotlin.gradle.plugin.KaptExtension> {
-        correctErrorTypes = true
-        arguments {
-            arg("multiPreviewType", "com.airbnb.android.submodule.showkasesample.LocalePreview")
-            arg("multiPreviewType", "com.airbnb.android.submodule.showkasesample.FontPreview")
-        }
-    }
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -56,11 +44,7 @@ dependencies {
     implementation(libs.support.lifecycleComposeRuntime)
 
     implementation(project(":showkase"))
-    if (project.hasProperty("useKsp")) {
-        add("ksp", project(":showkase-processor"))
-    } else {
-        add("kapt", project(":showkase-processor"))
-    }
+    ksp(project(":showkase-processor"))
 
     implementation(libs.compose.activityCompose)
     implementation(libs.compose.composeRuntime)

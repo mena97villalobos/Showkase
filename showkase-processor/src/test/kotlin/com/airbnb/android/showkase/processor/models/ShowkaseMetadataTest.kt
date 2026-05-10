@@ -3,7 +3,7 @@ package com.airbnb.android.showkase.processor.models
 import androidx.room.compiler.processing.XFieldElement
 import androidx.room.compiler.processing.XMethodElement
 import androidx.room.compiler.processing.util.Source
-import androidx.room.compiler.processing.util.runProcessorTest
+import androidx.room.compiler.processing.util.runKspTest
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isA
@@ -26,7 +26,7 @@ class ShowkaseMetadataTest {
             }
             """.trimIndent()
         )
-        runProcessorTest(listOf(libSource)) { invocation ->
+        runKspTest(listOf(libSource)) { invocation ->
             val barClass = invocation.processingEnv.requireTypeElement("Bar")
 
             expectThat(barClass.getDeclaredMethods()
@@ -55,26 +55,18 @@ class ShowkaseMetadataTest {
             }
             """.trimIndent()
         )
-        runProcessorTest(listOf(libSource)) { invocation ->
+        runKspTest(listOf(libSource)) { invocation ->
             val barClass = invocation.processingEnv.requireTypeElement("Bar")
 
             expectThat(barClass.getDeclaredMethods().single())
                 .get { isTopLevel(enclosingElement) }
                 .isFalse()
 
-            if (invocation.isKsp) {
-                expectThat(invocation.roundEnv.getElementsAnnotatedWith(MyAnnotation::class))
-                    .single()
-                    .isA<XFieldElement>()
-                    .get { isTopLevel(enclosingElement) }
-                    .isTrue()
-            } else {
-                expectThat(invocation.roundEnv.getElementsAnnotatedWith(MyAnnotation::class))
-                    .single()
-                    .isA<XMethodElement>()
-                    .get { isTopLevel(enclosingElement) }
-                    .isTrue()
-            }
+            expectThat(invocation.roundEnv.getElementsAnnotatedWith(MyAnnotation::class))
+                .single()
+                .isA<XFieldElement>()
+                .get { isTopLevel(enclosingElement) }
+                .isTrue()
         }
     }
 }

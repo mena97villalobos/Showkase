@@ -46,6 +46,7 @@ kotlin {
 
 dependencies {
     api(project(":showkase-annotation"))
+    api(project(":showkase-models"))
 
     implementation(libs.support.appCompat)
     implementation(libs.support.ktx)
@@ -58,6 +59,9 @@ dependencies {
     implementation(libs.compose.tooling)
     implementation(libs.compose.layout)
     implementation(libs.compose.material)
+
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.googleTruth)
 }
 
 mavenPublishing {

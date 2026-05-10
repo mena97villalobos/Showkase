@@ -75,13 +75,7 @@ annotation class ShowkaseComposable(
     val defaultStyle: Boolean = false,
     val tags: Array<String> = [],
     val extraMetadata: Array<String> = [],
-    val screenshotCaptureConfig: ScreenshotCaptureConfig = ScreenshotCaptureConfig(
-        // Need to specify default values here or else KAPT throws an error
-        type = ScreenshotCaptureType.SingleStaticImage,
-        durationMillis = 1000,
-        framerate = 10,
-        offsetsMillis = [0, 200, 400, 600, 800, 1000],
-    ),
+    val screenshotCaptureConfig: ScreenshotCaptureConfig = ScreenshotCaptureConfig(),
 )
 
 /**

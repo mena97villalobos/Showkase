@@ -50,6 +50,7 @@ internal fun ShowkaseTypographyInAGroupScreen(
     ) {
         items(
             items = filteredList,
+            key = { "${it.typographyGroup}_${it.typographyName}" },
             itemContent = { groupTypographyMetadata ->
                 Text(
                     text = groupTypographyMetadata.typographyName.replaceFirstChar {

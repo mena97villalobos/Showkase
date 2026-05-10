@@ -21,9 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.airbnb.android.showkase.models.ShowkaseBrowserComponent
 
+private val LightColors = lightColors()
+private val DarkColors = darkColors()
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SimpleTextCard(
+internal fun SimpleTextCard(
     text: String,
     onClick: () -> Unit
 ) {
@@ -74,7 +77,7 @@ internal fun ComponentCard(
         val composableModifier = Modifier.generateComposableModifier(metadata)
         val composableContainerModifier = Modifier.generateContainerModifier(onClick)
         MaterialTheme(
-            colors = if (darkMode) darkColors() else lightColors()
+            colors = if (darkMode) DarkColors else LightColors
         ) {
             Card(
                 shape = MaterialTheme.shapes.large

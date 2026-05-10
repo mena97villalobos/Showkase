@@ -37,6 +37,7 @@ internal fun ShowkaseComponentStylesScreen(
     LazyColumn {
         items(
             items = filteredList,
+            key = { it.componentKey },
             itemContent = { groupComponent ->
                 val styleName =
                     generatedStyleName(groupComponent.styleName, componentStylesList.size)
@@ -85,7 +86,7 @@ private fun back(
 ) {
     val isSearchActive = showkaseBrowserScreenMetadata.isSearchActive
     when {
-        isSearchActive -> showkaseBrowserScreenMetadata.clearActiveSearch()
+        isSearchActive -> onUpdateShowkaseBrowserScreenMetadata(showkaseBrowserScreenMetadata.clearActiveSearch())
         else -> {
             onUpdateShowkaseBrowserScreenMetadata(
                 showkaseBrowserScreenMetadata.copy(

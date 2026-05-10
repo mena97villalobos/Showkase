@@ -6,9 +6,7 @@ import androidx.room.compiler.processing.XMethodElement
 import androidx.room.compiler.processing.XProcessingEnv
 import androidx.room.compiler.processing.XType
 import androidx.room.compiler.processing.XTypeElement
-import androidx.room.compiler.processing.compat.XConverters.toJavac
 import androidx.room.compiler.processing.isField
-import androidx.room.compiler.processing.isLong
 import androidx.room.compiler.processing.isMethod
 import androidx.room.compiler.processing.isTypeElement
 import com.airbnb.android.showkase.annotation.ShowkaseComposable
@@ -19,15 +17,9 @@ import com.airbnb.android.showkase.processor.ScreenshotTestType
 import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.COMPOSABLE_SIMPLE_NAME
 import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.PREVIEW_PARAMETER_SIMPLE_NAME
 import com.airbnb.android.showkase.processor.exceptions.ShowkaseProcessorException
-import com.airbnb.android.showkase.processor.models.isJavac
 import com.airbnb.android.showkase.processor.utils.findAnnotationBySimpleName
-import com.airbnb.android.showkase.processor.utils.kotlinMetadata
 import com.airbnb.android.showkase.processor.writer.ShowkaseBrowserProperties
-import javax.lang.model.element.Element
 import kotlin.contracts.contract
-import kotlin.metadata.KmFunction
-import kotlin.metadata.declaresDefaultValue
-import kotlin.metadata.jvm.KotlinClassMetadata
 
 internal class ShowkaseValidator(private val environment: XProcessingEnv) {
 
@@ -108,64 +100,12 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
         // if there's more than one parameter that's annotated with @PreviewParameter
         return when {
             element.parameters.isEmpty() -> false
-            // If the user is using kapt, we need to leverage kotlin metadata library to get
-            // information about the default values of the method parameters. This is because
-            // using "hasDefaultValue" on the parameter returns false for top level functions
-            // when using kapt. Hence we opted to leverage the kotlin metadata library to add
-            // proper support.
-            element.isJavac() &&
-                    element.toJavac().enclosingElement.validateKaptComposableParameter(element) -> false
-            // If the user is using ksp, we had an easier way to do the same check so we avoid
-            // using the kotlin metadata library and instead rely on the information provided by
-            // the XProcessing library
-            !element.isJavac() && element.validateKspComposableParameters() -> false
+            element.validateComposableParameters() -> false
             else -> true
         }
     }
 
-    private fun Element.validateKaptComposableParameter(composableMethodElement: XMethodElement) =
-        when (val metadata = kotlinMetadata()) {
-            is KotlinClassMetadata.FileFacade -> metadata.kmPackage.functions.validateKaptComposableParameter(
-                composableMethodElement
-            )
-
-            is KotlinClassMetadata.Class -> metadata.kmClass.functions.validateKaptComposableParameter(
-                composableMethodElement
-            )
-
-            else -> false
-        }
-
-    private fun MutableList<KmFunction>.validateKaptComposableParameter(
-        composableMethodElement: XMethodElement,
-    ): Boolean {
-        // Get the kotlin metadata information for a given composable function being processed.
-        val composableFunctionMetadata =
-            this.find { it.name == composableMethodElement.name } ?: return false
-
-        // Divide the parameter list of a given composable function into parameters that are
-        // not annotated with @PreviewParameter and ones that are annotated with it.
-        val (nonPreviewParameterParameters, previewParameterParameters) =
-            composableMethodElement.parameters.partition {
-                it.getAllAnnotations().none {
-                    it.name == PREVIEW_PARAMETER_SIMPLE_NAME
-                }
-            }
-
-        // Get the kotlin metadata information for parameters that are not annotated with @PreviewParameter
-        val nonPreviewParameterParametersMetadata =
-            composableFunctionMetadata.valueParameters.filter { metadata ->
-                nonPreviewParameterParameters.any { metadata.name == it.name }
-            }
-
-        // Enforce that all parameters have default values and at most one parameters is annotated
-        // with @PreviewParameter
-        return nonPreviewParameterParametersMetadata.all {
-            it.declaresDefaultValue
-        } && previewParameterParameters.size <= 1
-    }
-
-    private fun XMethodElement.validateKspComposableParameters(): Boolean {
+    private fun XMethodElement.validateComposableParameters(): Boolean {
         // Divide the parameter list of a given composable function into parameters that are
         // not annotated with @PreviewParameter and ones that are annotated with it.
         val (nonPreviewParameterParameters, previewParameterParameters) =
@@ -196,26 +136,12 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
             )
         }
 
-        when (environment.backend) {
-            XProcessingEnv.Backend.JAVAC -> {
-                // Kapt can't see that the original type is a value class, it just sees the raw
-                // type of the Color value class which is a Long
-                if (element.type.isLong()) return
-            }
-
-            XProcessingEnv.Backend.KSP -> {
-                if (element.type.rawType == colorType.rawType) return
-            }
+        if (element.type.rawType != colorType.rawType) {
+            throw ShowkaseProcessorException(
+                "Only \"Color\" fields can be annotated with $annotationName",
+                element
+            )
         }
-
-        throw ShowkaseProcessorException(
-            "Only \"Color\" fields can be annotated with $annotationName",
-            element
-        )
-
-        // TODO(vinay.gaba) Also add the private modifier check. Unfortunately, the java code
-        //  for this element adds a private modifier since it's a field. Potentially use
-        //  kotlinMetadata to enforce this check.
     }
 
     internal fun validateTypographyElement(
@@ -239,11 +165,6 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
                     "Only \"TextStyle\" fields can be annotated with $annotationName",
                     element
                 )
-            }
-            // TODO(vinay.gaba) Also add the private modifier check. Unfortunately, the java code
-            //  for this element adds a private modifier since it's a field. Potentially use
-            //  kotlinMetadata to enforce this check.
-            else -> {
             }
         }
     }

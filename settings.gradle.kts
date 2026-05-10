@@ -17,6 +17,7 @@ dependencyResolutionManagement {
 rootProject.name = "Showkase"
 include(
     ":showkase",
+    ":showkase-models",
     ":showkase-processor",
     ":showkase-processor-testing",
     ":showkase-annotation",

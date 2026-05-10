@@ -2,23 +2,11 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
-if (project.hasProperty("useKsp")) {
-    apply(plugin = "com.google.devtools.ksp")
-    extensions.configure<com.google.devtools.ksp.gradle.KspExtension> {
-        arg("skipPrivatePreviews", "true")
-    }
-} else {
-    apply(plugin = "org.jetbrains.kotlin.kapt")
-    extensions.configure<org.jetbrains.kotlin.gradle.plugin.KaptExtension> {
-        correctErrorTypes = true
-        arguments {
-            arg("multiPreviewType", "com.vinaygaba.showkase_browser_testing_submodule.two.LocalePreview")
-            arg("multiPreviewType", "com.vinaygaba.showkase_browser_testing_submodule.two.EnglishLocalePreview")
-            arg("skipPrivatePreviews", "true")
-        }
-    }
+ksp {
+    arg("skipPrivatePreviews", "true")
 }
 
 android {
@@ -60,11 +48,7 @@ dependencies {
     implementation(libs.support.appCompat)
 
     implementation(project(":showkase"))
-    if (project.hasProperty("useKsp")) {
-        add("ksp", project(":showkase-processor"))
-    } else {
-        add("kapt", project(":showkase-processor"))
-    }
+    ksp(project(":showkase-processor"))
     implementation(project(":showkase-processor"))
     implementation(project(":showkase-screenshot-testing"))
 

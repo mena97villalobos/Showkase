@@ -3,20 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("shot")
     alias(libs.plugins.kotlin.compose)
-}
-
-if (project.hasProperty("useKsp")) {
-    apply(plugin = "com.google.devtools.ksp")
-    kotlin {
-        sourceSets.configureEach {
-            kotlin.srcDir("build/generated/ksp/$name/kotlin")
-        }
-    }
-} else {
-    apply(plugin = "org.jetbrains.kotlin.kapt")
-    extensions.configure<org.jetbrains.kotlin.gradle.plugin.KaptExtension> {
-        correctErrorTypes = true
-    }
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -54,33 +41,23 @@ android {
     }
 }
 
-if (project.hasProperty("useKsp")) {
-    extensions.configure<com.google.devtools.ksp.gradle.KspExtension> {
-        arg("skipPrivatePreviews", "true")
-    }
-} else {
-    extensions.configure<org.jetbrains.kotlin.gradle.plugin.KaptExtension> {
-        arguments {
-            arg("skipPrivatePreviews", "true")
-        }
-    }
+ksp {
+    arg("skipPrivatePreviews", "true")
 }
 
 kotlin {
     jvmToolchain(17)
+    sourceSets.configureEach {
+        kotlin.srcDir("build/generated/ksp/$name/kotlin")
+    }
 }
 
 dependencies {
     implementation(project(":showkase"))
     implementation(project(":sample-submodule"))
     implementation(project(":sample-submodule-2"))
-    if (project.hasProperty("useKsp")) {
-        add("ksp", project(":showkase-processor"))
-        add("kspAndroidTest", project(":showkase-processor"))
-    } else {
-        add("kapt", project(":showkase-processor"))
-        add("kaptAndroidTest", project(":showkase-processor"))
-    }
+    ksp(project(":showkase-processor"))
+    kspAndroidTest(project(":showkase-processor"))
 
     implementation(libs.support.appCompat)
     implementation(libs.support.ktx)

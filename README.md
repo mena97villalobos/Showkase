@@ -69,22 +69,20 @@ Using Showkase is straightforward and takes just a couple of minutes to get star
 setup, add this dependency to all the modules with UI elements that should be displayed inside the 
 Showkase browser.
 
-Showkase supports both ksp and kapt. By default, it uses kapt as we only recently added ksp support.
-
+Showkase uses KSP for annotation processing. Make sure the KSP Gradle plugin is applied in any module that consumes Showkase annotations.
 
 #### If you want Showkase to be available only in debug builds (Recommended and practical for most use cases)
 
 ```kotlin
 debugImplementation "com.airbnb.android:showkase:1.0.5"
 implementation "com.airbnb.android:showkase-annotation:1.0.5"
-kspDebug "com.airbnb.android:showkase-processor:1.0.5" or kaptDebug "com.airbnb.android:showkase-processor:1.0.5"
+kspDebug "com.airbnb.android:showkase-processor:1.0.5"
 ```
 
 #### If you want Showkase to be available in your release builds as well
 ```kotlin
 implementation "com.airbnb.android:showkase:1.0.5"
-ksp "com.airbnb.android:showkase-processor:1.0.5" or kapt "com.airbnb.android:showkase-processor:1.0.5"
-
+ksp "com.airbnb.android:showkase-processor:1.0.5"
 ```
 
 **Step 2**: Add the relevant annotations for every UI element that should be a part of the 
@@ -170,19 +168,9 @@ to understand the behavior when you don't pass any properties.
 - Stacked `@Preview` and `ShowkaseComposable` annotations are only supported with KSP at the moment. This is because of this [issue](https://youtrack.jetbrains.com/issue/KT-49682).
 - If you use `@Preview` to generate UI in the Showkase app, you have to make them `internal` or `public` functions. If you would like to have private previews, but skip them in during compilation, you can add `skipPrivatePreview`compiler flag:
 
-If you use KSP:
 ```
 ksp {
  arg("skipPrivatePreviews", "true")
-}
-```
-
-If you use KAPT:
-```
-kapt {
- arguments {
-  arg("skipPrivatePreviews", "true")
- }
 }
 ```
 
@@ -444,21 +432,7 @@ This will be skipped by KAPT, but KSP will pick it up. However, if you have an a
 @Preview(name = "Shape 100 by 100", group = "Shapes", widthDp = 100, heightDp = 100)
 annotation class CustomShape
 ```
-It will be picked up by both KSP and KAPT.
-
-###### Important for KAPT users
-
-You will need to provide a compiler arg in you module for the custom preview annotations that you are using and expecting to be picked up by Showkase. This can be done with the following code:
-
-```kt
-kapt {
-    arguments {
-        arg("multiPreviewType", "com.airbnb.android.submodule.showkasesample.LocalePreview")
-    }
-}
-```
-
-It is important to remember to use the whole qualified name of the annotation, and not just the name.
+It will be picked up by KSP. Custom multi-preview annotations are auto-discovered via classpath scanning, so no extra compiler arguments are needed.
 
 ## R8 / ProGuard
 

@@ -220,14 +220,16 @@ internal fun Modifier.generateComposableModifier(metadata: ShowkaseBrowserCompon
         this
             .padding(padding4x)
             .sizeIn(maxHeight = Dp(LocalConfiguration.current.screenHeightDp.toFloat()))
+    val widthDp = metadata.widthDp
+    val heightDp = metadata.heightDp
     when {
-        metadata.heightDp != null && metadata.widthDp != null -> baseModifier.size(
-            width = metadata.widthDp.dp,
-            height = metadata.heightDp.dp
+        heightDp != null && widthDp != null -> baseModifier.size(
+            width = widthDp.dp,
+            height = heightDp.dp
         )
 
-        metadata.heightDp != null -> baseModifier.height(Dp(metadata.heightDp.toFloat()))
-        metadata.widthDp != null -> baseModifier.width(Dp(metadata.widthDp.toFloat()))
+        heightDp != null -> baseModifier.height(Dp(heightDp.toFloat()))
+        widthDp != null -> baseModifier.width(Dp(widthDp.toFloat()))
         else -> baseModifier.fillMaxWidth()
     }
 }
@@ -240,6 +242,13 @@ private fun back(
     navigateTo(ShowkaseCurrentScreen.COMPONENT_STYLES)
 }
 
+/**
+ * Returns an [OnBackPressedDispatcherOwner] backed by a fresh, unwired
+ * [OnBackPressedDispatcher]. The dispatcher is intentionally not connected to the host activity's
+ * lifecycle — its purpose is to **swallow** back-press handlers registered by preview composables
+ * so they don't intercept browser-level back navigation. Provided through
+ * [LocalOnBackPressedDispatcherOwner] in places like [ComponentCard] and the paparazzi wrapper.
+ */
 @Composable
 internal fun rememberOnBackPressedDispatcherOwner(): OnBackPressedDispatcherOwner {
     val lifecycleOwner = LocalLifecycleOwner.current

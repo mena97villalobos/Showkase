@@ -6,15 +6,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     alias(libs.plugins.paparazzi)
     alias(libs.plugins.kotlin.compose)
-}
-
-if (project.hasProperty("useKsp")) {
-    apply(plugin = "com.google.devtools.ksp")
-} else {
-    apply(plugin = "org.jetbrains.kotlin.kapt")
-    extensions.configure<org.jetbrains.kotlin.gradle.plugin.KaptExtension> {
-        correctErrorTypes = true
-    }
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -98,15 +90,9 @@ afterEvaluate {
 
 dependencies {
     implementation(project(":showkase"))
-    if (project.hasProperty("useKsp")) {
-        add("ksp", project(":showkase-processor"))
-        add("kspAndroidTest", project(":showkase-processor"))
-        add("kspTest", project(":showkase-processor"))
-    } else {
-        add("kapt", project(":showkase-processor"))
-        add("kaptAndroidTest", project(":showkase-processor"))
-        add("kaptTest", project(":showkase-processor"))
-    }
+    ksp(project(":showkase-processor"))
+    kspAndroidTest(project(":showkase-processor"))
+    kspTest(project(":showkase-processor"))
     api(project(":showkase-screenshot-testing"))
 
     implementation(libs.compose.activityCompose)

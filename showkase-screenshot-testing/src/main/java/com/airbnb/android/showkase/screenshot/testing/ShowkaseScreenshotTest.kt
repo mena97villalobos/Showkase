@@ -19,9 +19,10 @@ import com.airbnb.android.showkase.annotation.ShowkaseScreenshot
 import com.airbnb.android.showkase.models.ShowkaseBrowserColor
 import com.airbnb.android.showkase.models.ShowkaseBrowserComponent
 import com.airbnb.android.showkase.models.ShowkaseBrowserTypography
-import com.airbnb.android.showkase.ui.padding4x
 import org.junit.Rule
-import java.util.*
+import java.util.Locale
+
+private val componentPadding = 16.dp
 
 /**
  *
@@ -33,17 +34,8 @@ import java.util.*
  * Here's an example of how you would typically use it:
  *
  * @ShowkaseScreenshotTest
- * abstract class MyScreenshotTest: ShowkaseScreenshotModule {
- *   override fun onScreenshot(
- *       id: String,
- *       name: String,
- *       group: String,
- *       styleName: String? = null,
- *       tags: List<String> = emptyList(),
- *       extraMetadata: List<String> = emptyList(),
- *       screenshotType: ShowkaseScreenshotType,
- *       screenshotBitmap: Bitmap
- *   ) {
+ * abstract class MyScreenshotTest: ShowkaseScreenshotTest {
+ *   override fun onScreenshot(metadata: ScreenshotMetadata) {
  *       // Here you do the action you want to take with the screenshot.
  *   }
  * }
@@ -51,37 +43,44 @@ import java.util.*
  * </p>
  *
  * Note: you should add this class to the androidTest sourceSet as that's where your testing
- * dependencies will exists otherwise the generate test won't compile.Additionally,Its important
+ * dependencies will exist otherwise the generated test won't compile. Additionally, it's important
  * that the class you annotate with [ShowkaseScreenshot] is either abstract or open as Showkase
- * generates a class that extends this class in order to get access to theonScreenshot method.
+ * generates a class that extends this class in order to get access to the onScreenshot method.
  */
-@Suppress("Detekt.TooGenericExceptionCaught", "Detekt.TooGenericExceptionThrown", "Detekt.LongParameterList")
+@Suppress("Detekt.TooGenericExceptionCaught", "Detekt.TooGenericExceptionThrown")
 interface ShowkaseScreenshotTest {
     @get:Rule
     val composeTestRule: ComposeContentTestRule
 
     /**
-     * This method is called during the execution of each screenshot test after the screenshot of
-     * the UI element has been successfully taken. Things that you'd typically want to do here include,
-     * but not limited to, the following:
-     * - Calling an API service that your app uses for matching screenshots
-     * - Storing the screenshot on device to generate golden copies of images
-     * - Using the new screenshot and comparing/asserting against a golden copy of the same element
-     *
-     * @param id a unique id to represent this screenshot. There are no guarantees that the id will
-     * be identical across screenshots for the same UI element.
-     * @param name name of the UI element.
-     * @param styleName The name of the style that this component represents. This is only available
-     * when ShowkaseScreenshotType == Composable.
-     * @param group group that this UI element belongs to
-     * @param tags The list of tags set on the component. This is only available when
-     * ShowkaseScreenshotType == Composable.
-     * @param extraMetadata The list of extra metadata set on the component. This is only available when
-     * ShowkaseScreenshotType == Composable.
-     * @param screenshotType A screenshot can be one of the following types: Composable, Color or Typography
-     * @param screenshotBitmap Bitmap of the given UI element
+     * Called during the execution of each screenshot test after the screenshot has been captured.
+     * Implementations typically save the bitmap to disk, compare it against a golden, or upload
+     * it to a screenshot service.
      */
+    fun onScreenshot(metadata: ScreenshotMetadata) {
+        @Suppress("DEPRECATION")
+        onScreenshot(
+            id = metadata.id,
+            name = metadata.name,
+            group = metadata.group,
+            styleName = metadata.styleName,
+            tags = metadata.tags,
+            extraMetadata = metadata.extraMetadata,
+            screenshotType = metadata.screenshotType,
+            screenshotBitmap = metadata.screenshotBitmap,
+        )
+    }
 
+    /**
+     * Legacy 8-parameter overload kept for backwards compatibility with subclasses written against
+     * the pre-refactor signature. New implementations should override [onScreenshot] above instead.
+     */
+    @Suppress("LongParameterList")
+    @Deprecated(
+        message = "Override the single-parameter onScreenshot(ScreenshotMetadata) instead.",
+        replaceWith = ReplaceWith("onScreenshot(metadata)"),
+        level = DeprecationLevel.WARNING,
+    )
     fun onScreenshot(
         id: String,
         name: String,
@@ -91,11 +90,15 @@ interface ShowkaseScreenshotTest {
         extraMetadata: List<String> = emptyList(),
         screenshotType: ShowkaseScreenshotType,
         screenshotBitmap: Bitmap,
-    )
+    ) {
+        throw NotImplementedError(
+            "ShowkaseScreenshotTest implementations must override onScreenshot(ScreenshotMetadata)."
+        )
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun takeComposableScreenshot(
-        showkaseBrowserComponent: ShowkaseBrowserComponent
+        showkaseBrowserComponent: ShowkaseBrowserComponent,
     ) {
         try {
             // Disable animations for screenshots to make them deterministic
@@ -103,29 +106,30 @@ interface ShowkaseScreenshotTest {
             composeTestRule.setContent { showkaseBrowserComponent.component() }
             val bitmap = composeTestRule.onRoot().captureToImage().asAndroidBitmap()
             onScreenshot(
-                id = showkaseBrowserComponent.componentKey,
-                name = showkaseBrowserComponent.componentName,
-                group = showkaseBrowserComponent.group,
-                styleName = showkaseBrowserComponent.styleName,
-                tags = showkaseBrowserComponent.tags,
-                extraMetadata = showkaseBrowserComponent.extraMetadata,
-                screenshotType = ShowkaseScreenshotType.Composable,
-                screenshotBitmap = bitmap,
+                ScreenshotMetadata(
+                    id = showkaseBrowserComponent.componentKey,
+                    name = showkaseBrowserComponent.componentName,
+                    group = showkaseBrowserComponent.group,
+                    styleName = showkaseBrowserComponent.styleName,
+                    tags = showkaseBrowserComponent.tags,
+                    extraMetadata = showkaseBrowserComponent.extraMetadata,
+                    screenshotType = ShowkaseScreenshotType.Composable,
+                    screenshotBitmap = bitmap,
+                )
             )
         } catch (e: Throwable) {
             throw RuntimeException(
                 "Failure while screenshotting component $showkaseBrowserComponent",
-                e
+                e,
             )
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun takeTypographyScreenshot(
-        showkaseBrowserTypography: ShowkaseBrowserTypography
+        showkaseBrowserTypography: ShowkaseBrowserTypography,
     ) {
         try {
-            // Disable animations for screenshots to make them deterministic
             composeTestRule.mainClock.autoAdvance = false
             composeTestRule.setContent {
                 BasicText(
@@ -134,32 +138,33 @@ interface ShowkaseScreenshotTest {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(padding4x),
-                    style = showkaseBrowserTypography.textStyle
+                        .padding(componentPadding),
+                    style = showkaseBrowserTypography.textStyle,
                 )
             }
             val bitmap = composeTestRule.onRoot().captureToImage().asAndroidBitmap()
             onScreenshot(
-                id = showkaseBrowserTypography.hashCode().toString(),
-                name = showkaseBrowserTypography.typographyName,
-                group = showkaseBrowserTypography.typographyGroup,
-                screenshotType = ShowkaseScreenshotType.Typography,
-                screenshotBitmap = bitmap,
+                ScreenshotMetadata(
+                    id = "${showkaseBrowserTypography.typographyGroup}_${showkaseBrowserTypography.typographyName}",
+                    name = showkaseBrowserTypography.typographyName,
+                    group = showkaseBrowserTypography.typographyGroup,
+                    screenshotType = ShowkaseScreenshotType.Typography,
+                    screenshotBitmap = bitmap,
+                )
             )
         } catch (e: Throwable) {
             throw RuntimeException(
-                "Failure while screenshotting typogrpahy $showkaseBrowserTypography",
-                e
+                "Failure while screenshotting typography $showkaseBrowserTypography",
+                e,
             )
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun takeColorScreenshot(
-        showkaseBrowserColor: ShowkaseBrowserColor
+        showkaseBrowserColor: ShowkaseBrowserColor,
     ) {
         try {
-            // Disable animations for screenshots to make them deterministic
             composeTestRule.mainClock.autoAdvance = false
             composeTestRule.setContent {
                 Box(
@@ -171,11 +176,13 @@ interface ShowkaseScreenshotTest {
             }
             val bitmap = composeTestRule.onRoot().captureToImage().asAndroidBitmap()
             onScreenshot(
-                id = showkaseBrowserColor.hashCode().toString(),
-                name = showkaseBrowserColor.colorName,
-                group = showkaseBrowserColor.colorGroup,
-                screenshotType = ShowkaseScreenshotType.Color,
-                screenshotBitmap = bitmap,
+                ScreenshotMetadata(
+                    id = "${showkaseBrowserColor.colorGroup}_${showkaseBrowserColor.colorName}",
+                    name = showkaseBrowserColor.colorName,
+                    group = showkaseBrowserColor.colorGroup,
+                    screenshotType = ShowkaseScreenshotType.Color,
+                    screenshotBitmap = bitmap,
+                )
             )
         } catch (e: Throwable) {
             throw RuntimeException("Failure while screenshotting color $showkaseBrowserColor", e)

@@ -7,7 +7,6 @@ import androidx.room.compiler.processing.XMemberContainer
 import androidx.room.compiler.processing.XMethodElement
 import androidx.room.compiler.processing.XType
 import androidx.room.compiler.processing.XTypeElement
-import androidx.room.compiler.processing.compat.XConverters.toJavac
 import com.airbnb.android.showkase.annotation.ScreenshotCaptureConfig
 import com.airbnb.android.showkase.annotation.ScreenshotCaptureType
 import com.airbnb.android.showkase.annotation.ScreenshotConfig
@@ -20,7 +19,6 @@ import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.PREVIEW
 import com.airbnb.android.showkase.processor.exceptions.ShowkaseProcessorException
 import com.airbnb.android.showkase.processor.logging.ShowkaseValidator
 import com.airbnb.android.showkase.processor.utils.findAnnotationBySimpleName
-import com.airbnb.android.showkase.processor.utils.getFieldWithReflection
 import com.airbnb.android.showkase.processor.utils.requireAnnotationBySimpleName
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
@@ -467,39 +465,10 @@ internal fun XElement.getShowkaseFunctionType(enclosingElement: XMemberContainer
 }
 
 fun XElement.isTopLevel(enclosingElement: XMemberContainer): Boolean {
-    return if (isJavac()) {
-        // Per enclosingElement kdoc:
-        // When running with KAPT, the value will be an XTypeElement.
-        // Right now xprocessing doesn't expose the top level details, so we have to use
-        // reflection to get kotlin metadata
-        val xTypeElement = enclosingElement as? XTypeElement
-            ?: throw ShowkaseProcessorException(
-                "Expected a type element but got $enclosingElement",
-                this
-            )
-
-        // JavacTypeElement has a kotlinMetadata property with a custom "KotlinMetadataElement"
-        // class type. This is null though if the type doesn't have metadata, such as in the case
-        // of a top level function.
-        val kotlinMetadata = xTypeElement.getFieldWithReflection<Any?>("kotlinMetadata")
-
-        return kotlinMetadata == null
-    } else {
-        // Per enclosingElement kdoc:
-        // When running with KSP, if this function is in source, the value will NOT be an XTypeElement.
-        // We don't expect to handle functions from classpath because we only process annotations in source
-        enclosingElement !is XTypeElement
-    }
-}
-
-fun XElement.isJavac(): Boolean {
-    @Suppress("TooGenericExceptionCaught")
-    return try {
-        toJavac()
-        true
-    } catch (e: Throwable) {
-        false
-    }
+    // Per enclosingElement kdoc:
+    // When running with KSP, if this function is in source, the value will NOT be an XTypeElement.
+    // We don't expect to handle functions from classpath because we only process annotations in source
+    return enclosingElement !is XTypeElement
 }
 
 internal fun getEnclosingClass(

@@ -553,52 +553,38 @@ class ShowkaseProcessorTest : BaseProcessorTest() {
     }
 
     @Test
-    fun `composable function with multiple preview functions compiles`() {
-        // Testing only KAPT here since some of these previews are stacked.
-        // This is yielding different output as repeatable annotations
-        // are not yet supported by KAPT.
-        compileInputsAndVerifyOutputs(modes = listOf(Mode.KAPT))
-    }
-
-    @Test
     fun `composable function with multiple preview functions compiles ksp`() {
-        compileInputsAndVerifyOutputs(modes = listOf(Mode.KSP))
+        compileInputsAndVerifyOutputs()
     }
 
     @Test
     fun `composable function with multiple preview annotations stacked generates output`() {
-        // This functionality is only supported with KSP for now.
-        compileInputsAndVerifyOutputs(modes = listOf(Mode.KSP))
+        compileInputsAndVerifyOutputs()
     }
 
     @Test
     fun `composable function with multiple showkasecomposable annotations stacked generates output`() {
-        // This functionality is only supported with KSP for now.
-        compileInputsAndVerifyOutputs(modes = listOf(Mode.KSP))
+        compileInputsAndVerifyOutputs()
     }
 
     @Test
     fun `composable function with custom preview annotation generates output`() {
-        compileInputsAndVerifyOutputs(modes = listOf(Mode.KAPT, Mode.KSP))
+        compileInputsAndVerifyOutputs()
     }
 
     @Test
     fun `composable function with custom preview annotation with preview param generates output`() {
-        compileInputsAndVerifyOutputs(modes = listOf(Mode.KAPT, Mode.KSP))
+        compileInputsAndVerifyOutputs()
     }
 
     @Test
     fun `composable function with repeatable custom preview annotation generates output`() {
-        // This is only supported by KSP for now
-        compileInputsAndVerifyOutputs(modes = listOf(Mode.KSP))
+        compileInputsAndVerifyOutputs()
     }
 
     @Test
     fun `composable function with multiple repeatable custom preview annotation generates output`() {
-        // This is only supported by KSP for now
-        compileInputsAndVerifyOutputs(
-            modes = listOf(Mode.KSP),
-        )
+        compileInputsAndVerifyOutputs()
     }
 
     @Test

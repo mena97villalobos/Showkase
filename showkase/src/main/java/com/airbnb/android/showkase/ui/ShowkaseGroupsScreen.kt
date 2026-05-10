@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.airbnb.android.showkase.models.ShowkaseBrowserColor
@@ -37,6 +38,7 @@ internal fun ShowkaseGroupsScreen(
     LazyColumn {
         items(
             items = filteredMap.entries.toList(),
+            key = { it.key },
             itemContent = { (group, list) ->
                 val size = getNumOfUIElements(list)
                 SimpleTextCard(
@@ -146,13 +148,15 @@ internal fun ShowkaseTypographyGroupsScreen(
     onUpdateShowkaseBrowserScreenMetadata: (ShowkaseBrowserScreenMetadata) -> Unit,
     navigateTo: (ShowkaseCurrentScreen) -> Unit,
 ) {
-    if (groupedTypographyMap.size == 1) {
-        onUpdateShowkaseBrowserScreenMetadata(
-            showkaseBrowserScreenMetadata.copy(
-                currentGroup = groupedTypographyMap.entries.first().key,
+    val singleGroup = groupedTypographyMap.entries.singleOrNull()
+    LaunchedEffect(singleGroup) {
+        if (singleGroup != null && showkaseBrowserScreenMetadata.currentGroup != singleGroup.key) {
+            onUpdateShowkaseBrowserScreenMetadata(
+                showkaseBrowserScreenMetadata.copy(currentGroup = singleGroup.key)
             )
-        )
-
+        }
+    }
+    if (singleGroup != null) {
         ShowkaseTypographyInAGroupScreen(
             groupedTypographyMap = groupedTypographyMap,
             showkaseBrowserScreenMetadata = showkaseBrowserScreenMetadata,

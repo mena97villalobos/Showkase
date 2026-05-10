@@ -41,6 +41,7 @@ internal fun ShowkaseComponentsInAGroupScreen(
     LazyColumn {
         items(
             items = filteredList,
+            key = { it.componentKey },
             itemContent = { groupComponent ->
                 ComponentCardTitle(groupComponent.componentName)
                 ComponentCard(
@@ -78,7 +79,7 @@ private fun goBackFromComponentsInAGroupScreen(
     when {
         isSearchActive -> onUpdateShowkaseBrowserScreenMetadata(showkaseBrowserScreenMetadata.clearActiveSearch())
         else -> {
-            showkaseBrowserScreenMetadata.clear()
+            onUpdateShowkaseBrowserScreenMetadata(showkaseBrowserScreenMetadata.clear())
             navigateTo(ShowkaseCurrentScreen.COMPONENT_GROUPS)
         }
     }

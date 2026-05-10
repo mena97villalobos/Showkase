@@ -66,18 +66,24 @@ class ShowkaseBrowserActivity : AppCompatActivity() {
 
     private fun getShowkaseProviderElements(
         classKey: String
-    ): ShowkaseElementsMetadata {
-        return try {
-            val showkaseComponentProvider =
-                Class.forName("$classKey$AUTOGEN_CLASS_NAME").getDeclaredConstructor().newInstance()
-            val showkaseMetadata = (showkaseComponentProvider as ShowkaseProvider).metadata()
-            ShowkaseElementsMetadata(
-                componentList = showkaseMetadata.componentList,
-                colorList = showkaseMetadata.colorList,
-                typographyList = showkaseMetadata.typographyList
-            )
-        } catch (exception: ClassNotFoundException) {
-            ShowkaseElementsMetadata()
+    ): ShowkaseElementsMetadata = runCatching {
+        val showkaseComponentProvider =
+            Class.forName("$classKey$AUTOGEN_CLASS_NAME").getDeclaredConstructor().newInstance()
+        (showkaseComponentProvider as ShowkaseProvider).metadata()
+    }.getOrElse { e ->
+        when (e) {
+            is ClassNotFoundException -> ShowkaseElementsMetadata()
+            is ReflectiveOperationException,
+            is ClassCastException,
+            is LinkageError ->
+                throw ShowkaseException(
+                    "Failed to load generated Showkase provider for $classKey$AUTOGEN_CLASS_NAME. " +
+                            "This usually means the processor didn't run on the module that contains your " +
+                            "@ShowkaseRoot, or the generated class is out of sync with the runtime. " +
+                            "Rebuild the project and verify your @ShowkaseRoot setup.",
+                    cause = e,
+                )
+            else -> throw e
         }
     }
 

@@ -36,8 +36,6 @@ import com.airbnb.android.showkase.processor.writer.ShowkaseScreenshotTestWriter
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
-import javax.annotation.processing.SupportedSourceVersion
-import javax.lang.model.SourceVersion
 
 class ShowkaseProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
@@ -45,46 +43,12 @@ class ShowkaseProcessorProvider : SymbolProcessorProvider {
     }
 }
 
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
-class ShowkaseProcessor @JvmOverloads constructor(
-    kspEnvironment: SymbolProcessorEnvironment? = null
+class ShowkaseProcessor(
+    kspEnvironment: SymbolProcessorEnvironment,
 ) : BaseProcessor(kspEnvironment) {
 
     private val logger = ShowkaseExceptionLogger()
     private val showkaseValidator by lazy { ShowkaseValidator(environment) }
-
-    override fun getSupportedAnnotationTypes(): MutableSet<String> {
-        val supportedAnnotations = mutableSetOf(
-            ShowkaseComposable::class.java.name,
-            PREVIEW_CLASS_NAME,
-            ShowkaseColor::class.java.name,
-            ShowkaseTypography::class.java.name,
-            ShowkaseRoot::class.java.name,
-            ShowkaseScreenshot::class.java.name,
-            ShowkaseMultiPreviewCodegenMetadata::class.java.name,
-        )
-        supportedAnnotations.addAll(supportedCustomAnnotationTypes())
-        return supportedAnnotations
-    }
-
-    // Getting the custom annotations that are supported as an compiler argument.
-    // It is expected to get the compiler argument as follows:
-    // arg("multiPreviewTypes", "com.airbnb.android.submodule.showkasesample.FontPreview")
-    // This should only be provided by KAPT users
-    private fun supportedCustomAnnotationTypes(): MutableSet<String> {
-        val set = mutableSetOf<String>()
-        environment
-            .options["multiPreviewType"]
-            ?.split(",")?.map { it.replace(" ", "") }
-            ?.toSet()?.let { set.addAll(it) }
-        return set
-    }
-
-    override fun getSupportedOptions() = mutableSetOf(
-        "skipPrivatePreviews",
-        "requireShowkaseComposableAnnotation",
-        "multiPreviewType"
-    )
 
     override fun process(environment: XProcessingEnv, round: XRoundEnv) {
         val componentMetadata = processComponentAnnotation(round)
@@ -235,7 +199,6 @@ class ShowkaseProcessor @JvmOverloads constructor(
                             showkaseWidth = annotation.getAsInt("showkaseWidth"),
                             showkaseHeight = annotation.getAsInt("showkaseHeight"),
                         )
-                        supportedAnnotationTypes.add(annotation.getAsString("supportTypeQualifiedName"))
                         supportedCustomPreview.add(codeGenAnnotation)
                     }
                 }

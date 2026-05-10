@@ -9,19 +9,15 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
-import javax.annotation.processing.AbstractProcessor
-import javax.annotation.processing.ProcessingEnvironment
-import javax.annotation.processing.RoundEnvironment
-import javax.lang.model.SourceVersion
-import javax.lang.model.element.TypeElement
 import javax.tools.Diagnostic
 
 /**
- * Creates a unified abstraction for processors of both KSP and java annotation processing.
+ * Base class for the KSP-backed Showkase processor. Provides a single uniform processing pipeline
+ * driven by Room's [XProcessingEnv] abstraction.
  */
 abstract class BaseProcessor(
-    val kspEnvironment: SymbolProcessorEnvironment? = null
-) : AbstractProcessor(), SymbolProcessor {
+    val kspEnvironment: SymbolProcessorEnvironment,
+) : SymbolProcessor {
 
     lateinit var environment: XProcessingEnv
         private set
@@ -35,44 +31,16 @@ abstract class BaseProcessor(
     private var roundNumber = 1
 
     init {
-        if (kspEnvironment != null) {
-            initOptions(kspEnvironment.options)
-        }
-    }
-
-    fun isKsp(): Boolean = kspEnvironment != null
-
-    override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.RELEASE_17
-
-    override fun init(processingEnv: ProcessingEnvironment) {
-        super.init(processingEnv)
-        environment = XProcessingEnv.create(processingEnv)
-        initOptions(processingEnv.options)
+        initOptions(kspEnvironment.options)
     }
 
     /**
-     * Unified place to handle any compiler processor options that are passed to
-     * either javac processor or KSP processor,
+     * Unified place to handle any compiler processor options that are passed to the KSP processor,
      * before any rounds are processed.
      */
     open fun initOptions(options: Map<String, String>) {}
 
-    final override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        if (roundEnv.errorRaised()) {
-            onError()
-        }
-
-        internalProcess(environment, XRoundEnv.create(environment, roundEnv))
-
-        if (roundEnv.processingOver()) {
-            finish()
-        }
-
-        return false
-    }
-
     final override fun process(resolver: Resolver): List<KSAnnotated> {
-        val kspEnvironment = requireNotNull(kspEnvironment)
         environment = XProcessingEnv.create(
             kspEnvironment,
             resolver,
@@ -83,12 +51,9 @@ abstract class BaseProcessor(
 
     private fun internalProcess(
         environment: XProcessingEnv,
-        round: XRoundEnv
+        round: XRoundEnv,
     ) {
-        val timer =
-            Timer(
-                this.javaClass.simpleName + " [Round $roundNumber][${if (isKsp()) "ksp" else "javac"}]"
-            )
+        val timer = Timer("${this.javaClass.simpleName} [Round $roundNumber]")
         timer.start()
 
         tryOrPrintError {
@@ -116,6 +81,6 @@ abstract class BaseProcessor(
 
     abstract fun process(
         environment: XProcessingEnv,
-        round: XRoundEnv
+        round: XRoundEnv,
     )
 }
