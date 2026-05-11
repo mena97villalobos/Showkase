@@ -6,7 +6,6 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.airbnb.android.showkase.models.Showkase
 import com.airbnb.android.showkase.ui.ShowkaseBrowserActivity
-import kotlinx.coroutines.delay
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,16 +35,7 @@ class ShowcaseBrowserTest {
             }
         )
 
-    // This will alter now since KSP supports stacked preview annotations and KAPT does not.
-    // It is not supported in KAPT because there is no support for repeatable annotations in KAPT
-    // beyond the source retention KEEP, except for in the new IR backend which was introduced
-    // in Kotlin 1.6. It will be available in the old backend in Kotlin version 1.7.20.
-    // See https://youtrack.jetbrains.com/issue/KT-49682 for more information about this.
-    private val componentSize = if (BuildConfig.IS_RUNNING_KSP) {
-        20
-    } else {
-        10
-    }
+    private val componentSize = 20
 
     @Test
     fun activity_starts_and_all_the_showkase_ui_elements_are_visible_on_the_screen_and_clickable() {
@@ -695,37 +685,34 @@ class ShowcaseBrowserTest {
 
     @Test
     fun stacked_preview_show_up_in_browser() {
-        // Stacked previews are only supported from ksp, so this is to bypass kapt on CI
-        if (BuildConfig.IS_RUNNING_KSP) {
-            composeTestRule.apply {
+        composeTestRule.apply {
 
-                verifyLandingScreen(
-                    components = componentSize,
-                    typography = 13,
-                    colors = 4,
-                )
-                // Tap on the "Components" row
-                clickRowWithText("Components ($componentSize)")
+            verifyLandingScreen(
+                components = componentSize,
+                typography = 13,
+                colors = 4,
+            )
+            // Tap on the "Components" row
+            clickRowWithText("Components ($componentSize)")
 
-                waitForIdle()
+            waitForIdle()
 
-                onRoot().performTouchInput {
-                    swipeUp()
-                }
-
-                waitForIdle()
-
-                clickRowWithText("Group7 (4)")
-
-                waitForIdle()
-
-                // Verify that they are all displayed and treated as different components
-                onNodeWithText("Composable7").assertIsDisplayed()
-                onNodeWithText("Composable8").assertIsDisplayed()
-                onNodeWithText("Composable9").assertIsDisplayed()
-                onNodeWithText("Composable10").assertIsDisplayed()
-
+            onRoot().performTouchInput {
+                swipeUp()
             }
+
+            waitForIdle()
+
+            clickRowWithText("Group7 (4)")
+
+            waitForIdle()
+
+            // Verify that they are all displayed and treated as different components
+            onNodeWithText("Composable7").assertIsDisplayed()
+            onNodeWithText("Composable8").assertIsDisplayed()
+            onNodeWithText("Composable9").assertIsDisplayed()
+            onNodeWithText("Composable10").assertIsDisplayed()
+
         }
     }
 
@@ -783,29 +770,26 @@ class ShowcaseBrowserTest {
 
     @Test
     fun customStackedSubmodulePreviewShowsUpInBrowserForKsp() {
-        if (BuildConfig.IS_RUNNING_KSP) {
+        composeTestRule.apply {
 
-            composeTestRule.apply {
+            verifyLandingScreen(
+                components = componentSize,
+                typography = 13,
+                colors = 4,
+            )
+            // Tap on the "Components" row
+            clickRowWithText("Components ($componentSize)")
 
-                verifyLandingScreen(
-                    components = componentSize,
-                    typography = 13,
-                    colors = 4,
-                )
-                // Tap on the "Components" row
-                clickRowWithText("Components ($componentSize)")
+            waitForIdle()
 
-                waitForIdle()
+            clickRowWithText("CustomSubmodulePreview (2)")
 
-                clickRowWithText("CustomSubmodulePreview (2)")
+            waitForIdle()
 
-                waitForIdle()
+            // Verify that they are all displayed and treated as different components
+            onNodeWithText("CustomShape - CustomSize 200 * 200").assertIsDisplayed()
+            onNodeWithText("CustomShape - CustomSize 100 * 100").assertIsDisplayed()
 
-                // Verify that they are all displayed and treated as different components
-                onNodeWithText("CustomShape - CustomSize 200 * 200").assertIsDisplayed()
-                onNodeWithText("CustomShape - CustomSize 100 * 100").assertIsDisplayed()
-
-            }
         }
     }
 
@@ -830,7 +814,7 @@ class ShowcaseBrowserTest {
 
             waitForIdle()
 
-            val composables = if (BuildConfig.IS_RUNNING_KSP) 3 else 1
+            val composables = 3
 
             clickRowWithText("LocalePreview ($composables)")
 
@@ -865,7 +849,7 @@ class ShowcaseBrowserTest {
 
             waitForIdle()
 
-            val composables = if (BuildConfig.IS_RUNNING_KSP) 3 else 1
+            val composables = 3
 
             clickRowWithText("LocalePreview ($composables)")
 
