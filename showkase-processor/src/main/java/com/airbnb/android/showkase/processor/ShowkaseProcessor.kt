@@ -27,7 +27,7 @@ import com.airbnb.android.showkase.processor.utils.getAsInt
 import com.airbnb.android.showkase.processor.utils.getAsString
 import com.airbnb.android.showkase.processor.utils.getAsStringList
 import com.airbnb.android.showkase.processor.utils.requireAnnotation
-import com.airbnb.android.showkase.processor.writer.PaparazziShowkaseScreenshotTestWriter
+import com.airbnb.android.showkase.processor.writer.RoborazziShowkaseScreenshotTestWriter
 import com.airbnb.android.showkase.processor.writer.ShowkaseBrowserProperties
 import com.airbnb.android.showkase.processor.writer.ShowkaseBrowserPropertyWriter
 import com.airbnb.android.showkase.processor.writer.ShowkaseBrowserWriter
@@ -625,8 +625,8 @@ class ShowkaseProcessor(
                 }
             }
 
-            ScreenshotTestType.PAPARAZZI_SHOWKASE -> {
-                PaparazziShowkaseScreenshotTestWriter(codeGenerator).apply {
+            ScreenshotTestType.ROBORAZZI_SHOWKASE -> {
+                RoborazziShowkaseScreenshotTestWriter(codeGenerator).apply {
                     generateScreenshotTests(
                         screenshotTestPackageName,
                         rootModulePackageName,
@@ -675,5 +675,5 @@ internal enum class ShowkaseGeneratedMetadataType {
 
 internal enum class ScreenshotTestType {
     SHOWKASE,
-    PAPARAZZI_SHOWKASE
+    ROBORAZZI_SHOWKASE,
 }

@@ -42,16 +42,14 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 ## Verifying changes: run the CI pipeline locally
 
 **Do not declare work done until you have run the same tasks CI runs.** `assembleDebug` succeeding
-is not enough — CI runs `check`, lint, KSP-generated tests, and paparazzi screenshot verification,
-any of which can fail when `assembleDebug` is green. Past incidents where this rule was skipped:
+is not enough — CI runs `check`, lint, KSP-generated tests, and the Roborazzi screenshot job, any
+of which can fail when `assembleDebug` is green. Past incidents where this rule was skipped:
 golden test resources stale after a KotlinPoet bump, lint baselines stale after a Compose/AGP bump,
-paparazzi alpha incompatible with a Gradle bump, screenshot tests not discovering KSP-generated test
-classes.
+screenshot tests not discovering KSP-generated test classes.
 
 ### Build environment
 
-- **JDK 21 is required.** Paparazzi 2.0.0-alpha04 declares JVM 21+ as a build-runtime dependency, so
-  a JDK 17 build fails at configuration time. Export before invoking gradle:
+- **JDK 21 is required.** Export before invoking gradle:
   ```sh
   export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
   ```
@@ -67,27 +65,28 @@ it (UI / instrumentation / showkase-browser-testing-*).
 
 1. **`build` job — `./gradlew check`**
    ```sh
-   ./gradlew check --stacktrace -x :showkase-screenshot-testing-paparazzi-sample:testDebugUnitTest
+   ./gradlew check --stacktrace
    ```
-   The `-x` flag is mandatory and matches what CI does — paparazzi-2.0.0-alpha04 hooks into
-   `testDebugUnitTest` via a Gradle 9-incompatible test-results API, so this task fails for the
-   wrong reason if included. Until a newer paparazzi alpha ships, the paparazzi-sample's unit tests
-   run only in the dedicated `paparazi-screenshot-tests` CI job.
-
    This runs: kotlin compilation, unit tests, lint, detekt, KSP, and the showkase-processor
    golden-file tests.
 
-2. **`paparazi-screenshot-tests`
-   job — `./gradlew :showkase-screenshot-testing-paparazzi-sample:verifyPaparazziDebug`**
+2. **`roborazzi-screenshot-tests`
+   job — `./gradlew :showkase-screenshot-testing-roborazzi-sample:verifyRoborazziDebug`**
    ```sh
-   ./gradlew :showkase-screenshot-testing-paparazzi-sample:verifyPaparazziDebug --stacktrace
+   ./gradlew :showkase-screenshot-testing-roborazzi-sample:verifyRoborazziDebug --rerun-tasks --stacktrace
    ```
-   This compares newly-rendered Compose screenshots against committed golden PNGs in
-   `showkase-screenshot-testing-paparazzi-sample/src/test/snapshots/`. Marked
-   `continue-on-error: true` in CI because of the alpha04/Gradle-9 incompatibility, but a passing
-   local run is still meaningful evidence the change is safe. To record new goldens after
-   intentional UI changes:
-   `./gradlew :showkase-screenshot-testing-paparazzi-sample:recordPaparazziDebug`.
+   This is the canonical screenshot pipeline. It runs Robolectric + Roborazzi on the JVM (no
+   emulator needed) and compares each Showkase preview against the committed golden PNGs in
+   `showkase-screenshot-testing-roborazzi-sample/src/test/snapshots/roborazzi/`.
+
+   To re-record goldens after an intentional UI / theme / Compose-version change:
+   ```sh
+   ./gradlew :showkase-screenshot-testing-roborazzi-sample:recordRoborazziDebug --rerun-tasks
+   ```
+   `--rerun-tasks` is required: Gradle 9's incremental test discovery sometimes reports
+   "no tests discovered" when KSP-generated test classes haven't changed but baselines need a
+   fresh render. Look in `build/outputs/roborazzi/` for `*_actual.png` and `*_compare.png`
+   artifacts when verification fails.
 
 3. **`ui-testing` job — `./gradlew connectedCheck` + `./gradlew executeScreenshotTests`** (skip
    unless relevant)
@@ -108,30 +107,28 @@ it (UI / instrumentation / showkase-browser-testing-*).
   new findings: `./gradlew updateLintBaseline`. Review the diff in `lint-baseline.xml` before
   committing — make sure the new entries are pre-existing patterns rather than regressions you just
   introduced.
-- **Paparazzi screenshot mismatches** (after bumping Compose, paparazzi, or any UI-affecting
-  dependency): `./gradlew :showkase-screenshot-testing-paparazzi-sample:recordPaparazziDebug` to
-  refresh goldens, then commit the changed PNGs. Always sanity-check at least a few golden diffs
-  visually before committing.
-- **`testDebugUnitTest`: "no tests discovered"** in `:showkase-screenshot-testing-paparazzi-sample`:
-  the Showkase KSP processor generates `MyPaparazziShowkaseScreenshotTestImpl.kt` at
-  `build/generated/ksp/debugUnitTest/kotlin/...`. If that file is missing, KSP incremental cache is
-  stale. Delete `showkase-screenshot-testing-paparazzi-sample/build/` and re-run, or pass
-  `--rerun-tasks`.
+- **Roborazzi screenshot mismatches** (after bumping Compose, Roborazzi, or any UI-affecting
+  dependency): `./gradlew :showkase-screenshot-testing-roborazzi-sample:recordRoborazziDebug
+  --rerun-tasks` to refresh goldens, then commit the changed PNGs under
+  `showkase-screenshot-testing-roborazzi-sample/src/test/snapshots/roborazzi/`. Always sanity-check
+  at least a few golden diffs visually before committing.
+- **`testDebugUnitTest`: "no tests discovered"** in `:showkase-screenshot-testing-roborazzi-sample`:
+  KSP incremental cache or Gradle 9's test-discovery cache is stale. Either delete the module's
+  `build/` directory or rerun the task with `--rerun-tasks`.
 
 ### Verification checklist before declaring done
 
 - [ ] `JAVA_HOME` points at a JDK 21 install.
-- [ ] 
-  `./gradlew check --stacktrace -x :showkase-screenshot-testing-paparazzi-sample:testDebugUnitTest`
-  passes.
-- [ ] `./gradlew :showkase-screenshot-testing-paparazzi-sample:verifyPaparazziDebug --stacktrace`
-  passes (or failure is the known paparazzi/Gradle-9 `TestResultsProvider.hasOutput`
-  incompatibility, which is `continue-on-error` in CI).
+- [ ] `./gradlew check --stacktrace` passes.
+- [ ] `./gradlew :showkase-screenshot-testing-roborazzi-sample:verifyRoborazziDebug --rerun-tasks
+  --stacktrace` passes. (`--rerun-tasks` is required because of Gradle 9's incremental test-
+  discovery quirk; running without it can surface a misleading "no tests discovered" error.)
 - [ ] If your change is UI- or instrumentation-adjacent, also run `./gradlew connectedCheck` against
   an emulator.
 - [ ] No new entries in any `lint-baseline.xml` that aren't intentional.
-- [ ] No new golden PNGs in `showkase-screenshot-testing-paparazzi-sample/src/test/snapshots/` that
-  you didn't mean to add.
+- [ ] No new golden PNGs in
+  `showkase-screenshot-testing-roborazzi-sample/src/test/snapshots/roborazzi/` that you didn't mean
+  to add.
 
 If any of the above can't be run (no JDK 21 installed, no emulator available), say so explicitly in
 your summary rather than reporting success.

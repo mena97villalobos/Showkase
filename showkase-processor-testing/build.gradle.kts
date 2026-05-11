@@ -64,6 +64,5 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.kotlinCompileTesting)
     testImplementation(libs.kotlinCompileTestingKsp)
-    testImplementation(project(":showkase-screenshot-testing-paparazzi"))
-    testImplementation(libs.test.paparazzi)
+    testImplementation(project(":showkase-screenshot-testing-roborazzi"))
 }

@@ -247,7 +247,7 @@ private fun back(
  * [OnBackPressedDispatcher]. The dispatcher is intentionally not connected to the host activity's
  * lifecycle — its purpose is to **swallow** back-press handlers registered by preview composables
  * so they don't intercept browser-level back navigation. Provided through
- * [LocalOnBackPressedDispatcherOwner] in places like [ComponentCard] and the paparazzi wrapper.
+ * [LocalOnBackPressedDispatcherOwner] in places like [ComponentCard] and the Roborazzi wrapper.
  */
 @Composable
 internal fun rememberOnBackPressedDispatcherOwner(): OnBackPressedDispatcherOwner {

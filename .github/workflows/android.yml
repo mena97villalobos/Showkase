@@ -23,16 +23,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Run Checks
-        # Exclude :showkase-screenshot-testing-paparazzi-sample's test task here -
-        # paparazzi-2.0.0-alpha04 is incompatible with Gradle 9. Those tests run
-        # in the dedicated paparazi-screenshot-tests job below.
-        run: ./gradlew check --stacktrace -x :showkase-screenshot-testing-paparazzi-sample:testDebugUnitTest
+        run: ./gradlew check --stacktrace
 
-  paparazi-screenshot-tests:
+  roborazzi-screenshot-tests:
     runs-on: ubuntu-latest
-    # paparazzi-2.0.0-alpha04 calls a TestResultsProvider API that Gradle 9 removed.
-    # Allow this job to fail until a newer paparazzi alpha is published.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -45,23 +39,23 @@ jobs:
       - name: Cache Gradle dependencies
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Run Paparazzi Screenshot Tests
-        run: ./gradlew :showkase-screenshot-testing-paparazzi-sample:verifyPaparazziDebug --stacktrace
+      - name: Run Roborazzi Screenshot Tests
+        run: ./gradlew :showkase-screenshot-testing-roborazzi-sample:verifyRoborazziDebug --stacktrace
 
       - name: Upload Screenshot Test Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: reports
-          path: showkase-screenshot-testing-paparazzi-sample/build/reports/tests/testDebugUnitTest/
+          name: roborazzi-reports
+          path: showkase-screenshot-testing-roborazzi-sample/build/reports/tests/testDebugUnitTest/
           retention-days: 1
 
-      - name: Upload Screenshot Failure Differences
+      - name: Upload Screenshot Diff Outputs
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: reports
-          path: showkase-screenshot-testing-paparazzi-sample/out/failures/
+          name: roborazzi-diffs
+          path: showkase-screenshot-testing-roborazzi-sample/build/outputs/roborazzi/
           retention-days: 1
 
   ui-testing:

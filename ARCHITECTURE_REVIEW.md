@@ -2,7 +2,14 @@
 
 Review date: 2026-05-10. Reviewer perspective: Android architect. Scope: `showkase`, `showkase-processor`, `showkase-annotation`, `showkase-screenshot-testing` + its two backend modules. Sample / browser-testing / sample-submodule modules sampled for patterns only. Focus areas: (1) public API & binary-compat, (2) processor architecture, (3) Compose UI & perf, (4) testing strategy, (5) KAPT removal roadmap.
 
-All findings cite `file:line` so each is independently actionable. Out of scope for this review: version bumps (Compose, Kotlin, AGP, paparazzi, shot, vanniktech), README rewrites, new features, code changes. The review is doc-only.
+All findings cite `file:line` so each is independently actionable. Out of scope for this review:
+version bumps (Compose, Kotlin, AGP, Roborazzi, shot, vanniktech), README rewrites, new features,
+code changes. The review is doc-only.
+
+> **Note (post-review):** The Paparazzi backend (`showkase-screenshot-testing-paparazzi*` modules)
+> was subsequently replaced by Roborazzi after `paparazzi-2.0.0-alpha04` proved incompatible with
+> Gradle 9. References in this document to those modules describe the codebase at the time of writing;
+> the active screenshot pipeline is now `showkase-screenshot-testing-roborazzi` / `-roborazzi-sample`.
 
 ## 1. Executive summary
 
@@ -476,7 +483,8 @@ Top picks for execution order. "Effort" is rough engineering-day cost: S = under
 
 ## 10. Out of scope (and why)
 
-- **No version bumps** for Compose, Kotlin, AGP, KSP, paparazzi, shot, vanniktech, detekt. These are separate workstreams with their own risk profiles (especially Compose M2→M3).
+- **No version bumps** for Compose, Kotlin, AGP, KSP, Roborazzi, shot, vanniktech, detekt. These are
+  separate workstreams with their own risk profiles (especially Compose M2→M3).
 - **No README rewrites.** README install instructions reference both KAPT and KSP setups; that gets updated as part of Phase A's CI/docs sweep, but not as part of this review.
 - **No new features** — preview-parameter screenshot support, dark-mode toggle in browser, theme customization, drawer/categories revamp. The review flags gaps but doesn't scope new work.
 - **No commit/PR creation.** The review is doc-only; each recommendation can be picked up as its own PR.

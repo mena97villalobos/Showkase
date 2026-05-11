@@ -29,6 +29,6 @@ include(
     ":showkase-browser-testing-submodule",
     ":showkase-browser-testing-submodule-2",
     ":showkase-screenshot-testing-shot",
-    ":showkase-screenshot-testing-paparazzi-sample",
-    ":showkase-screenshot-testing-paparazzi",
+    ":showkase-screenshot-testing-roborazzi",
+    ":showkase-screenshot-testing-roborazzi-sample",
 )
