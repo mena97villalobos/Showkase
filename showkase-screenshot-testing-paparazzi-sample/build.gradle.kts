@@ -70,6 +70,20 @@ afterEvaluate {
                 invokeMethod("srcDir", testOutputFolder)
             }
         }
+
+        // AGP lint tasks read the KSP-generated test sources but Gradle can't infer
+        // the producer/consumer relationship from a srcDir registration alone. Wire
+        // the dependency explicitly to satisfy validation.
+        val variantCapitalized = variantName.replaceFirstChar { it.uppercase() }
+        val kspTestTaskName = "ksp${variantCapitalized}UnitTestKotlin"
+        listOf(
+            "generate${variantCapitalized}UnitTestLintModel",
+            "lintAnalyze${variantCapitalized}UnitTest",
+        ).forEach { consumer ->
+            tasks.matching { it.name == consumer }.configureEach {
+                dependsOn(kspTestTaskName)
+            }
+        }
     }
 
     val libraryExtension = extensions.findByType(LibraryExtension::class.java)

@@ -330,10 +330,14 @@ internal class ShowkaseValidator(private val resolverProvider: () -> Resolver) {
             .filterIsInstance<KSClassDeclaration>()
             .filter { it.isCompanionObject }
             .toList()
+        val screenshotTestName =
+            paparazziShowkaseScreenshotTestTypeMirror.declaration.qualifiedName?.asString()
+        val companionName =
+            paparazziShowkaseScreenshotTestCompanionType.declaration.qualifiedName?.asString()
         val errorMessage =
-            "Classes implementing the ${paparazziShowkaseScreenshotTestTypeMirror.declaration.qualifiedName?.asString()} " +
+            "Classes implementing the $screenshotTestName " +
                     "interface should have a companion object that implements the " +
-                    "${paparazziShowkaseScreenshotTestCompanionType.declaration.qualifiedName?.asString()} interface."
+                    "$companionName interface."
         if (companionObjectTypeElements.isEmpty()) {
             throw ShowkaseProcessorException(
                 errorMessage,

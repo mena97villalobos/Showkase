@@ -164,8 +164,10 @@ internal class ShowkaseBrowserWriter(private val codeGenerator: CodeGenerator) {
     // This is to aggregate metadata for the custom annotation annotated with Preview
     internal fun writeCustomAnnotationElementToMetadata(element: KSAnnotated) {
         if (element !is KSClassDeclaration) return
-        val qualifiedName = element.qualifiedName?.asString() ?: return
-        if (element.classKind == ClassKind.ANNOTATION_CLASS && qualifiedName == ShowkaseProcessor.PREVIEW_CLASS_NAME) return
+        val qualifiedName = element.qualifiedName?.asString()
+        val isPreviewAnnotation = element.classKind == ClassKind.ANNOTATION_CLASS &&
+            qualifiedName == ShowkaseProcessor.PREVIEW_CLASS_NAME
+        if (qualifiedName == null || isPreviewAnnotation) return
 
         val moduleName = "Showkase_${qualifiedName.replace(".", "_")}"
         val generatedClassName =

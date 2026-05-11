@@ -100,13 +100,14 @@ internal fun KSAnnotated.containingFileOrNull(): KSFile? =
 internal fun KSType.isSameTypeAs(other: KSType): Boolean {
     val thisName = this.declaration.qualifiedName?.asString()
     val otherName = other.declaration.qualifiedName?.asString()
-    if (thisName == null || otherName == null) return false
-    if (thisName != otherName) return false
-    if (this.arguments.size != other.arguments.size) return false
-    return this.arguments.zip(other.arguments).all { (a, b) ->
-        a.type?.resolve()?.declaration?.qualifiedName?.asString() ==
-            b.type?.resolve()?.declaration?.qualifiedName?.asString()
-    }
+    return thisName != null &&
+        otherName != null &&
+        thisName == otherName &&
+        this.arguments.size == other.arguments.size &&
+        this.arguments.zip(other.arguments).all { (a, b) ->
+            a.type?.resolve()?.declaration?.qualifiedName?.asString() ==
+                b.type?.resolve()?.declaration?.qualifiedName?.asString()
+        }
 }
 
 /**
