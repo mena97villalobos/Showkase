@@ -1,9 +1,12 @@
 package com.airbnb.android.showkase.processor.models
 
-import androidx.room.compiler.processing.XFieldElement
-import androidx.room.compiler.processing.XMethodElement
-import androidx.room.compiler.processing.util.Source
-import androidx.room.compiler.processing.util.runKspTest
+import com.airbnb.android.showkase.processor.util.runKspProcessorTest
+import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.getDeclaredProperties
+import com.google.devtools.ksp.symbol.FunctionKind
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.tschuchort.compiletesting.SourceFile
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.isA
@@ -15,7 +18,7 @@ class ShowkaseMetadataTest {
 
     @Test
     fun isTopLevelFunction() {
-        val libSource = Source.kotlin(
+        val libSource = SourceFile.kotlin(
             "lib.kt",
             """
             @com.airbnb.android.showkase.processor.models.MyAnnotation
@@ -26,25 +29,24 @@ class ShowkaseMetadataTest {
             }
             """.trimIndent()
         )
-        runKspTest(listOf(libSource)) { invocation ->
-            val barClass = invocation.processingEnv.requireTypeElement("Bar")
+        runKspProcessorTest(listOf(libSource)) { resolver ->
+            val barClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Bar"))!!
+            val enclosedFn = barClass.getDeclaredFunctions()
+                .single { it.simpleName.asString() == "enclosedFoo" }
 
-            expectThat(barClass.getDeclaredMethods()
-                .single())
-                .get { isTopLevel(enclosingElement) }
-                .isFalse()
+            expectThat(enclosedFn.functionKind == FunctionKind.TOP_LEVEL).isFalse()
 
-            expectThat(invocation.roundEnv.getElementsAnnotatedWith(MyAnnotation::class))
+            expectThat(resolver.getSymbolsWithAnnotation(MyAnnotation::class.qualifiedName!!).toList())
                 .single()
-                .isA<XMethodElement>()
-                .get { isTopLevel(enclosingElement) }
+                .isA<KSFunctionDeclaration>()
+                .get { functionKind == FunctionKind.TOP_LEVEL }
                 .isTrue()
         }
     }
 
     @Test
     fun isTopLevelFunctionProperty() {
-        val libSource = Source.kotlin(
+        val libSource = SourceFile.kotlin(
             "lib.kt",
             """
             @com.airbnb.android.showkase.processor.models.MyAnnotation
@@ -55,17 +57,17 @@ class ShowkaseMetadataTest {
             }
             """.trimIndent()
         )
-        runKspTest(listOf(libSource)) { invocation ->
-            val barClass = invocation.processingEnv.requireTypeElement("Bar")
+        runKspProcessorTest(listOf(libSource)) { resolver ->
+            val barClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString("Bar"))!!
+            val enclosedProp = barClass.getDeclaredProperties()
+                .single { it.simpleName.asString() == "enclosedFoo" }
 
-            expectThat(barClass.getDeclaredMethods().single())
-                .get { isTopLevel(enclosingElement) }
-                .isFalse()
+            expectThat(enclosedProp.parentDeclaration == null).isFalse()
 
-            expectThat(invocation.roundEnv.getElementsAnnotatedWith(MyAnnotation::class))
+            expectThat(resolver.getSymbolsWithAnnotation(MyAnnotation::class.qualifiedName!!).toList())
                 .single()
-                .isA<XFieldElement>()
-                .get { isTopLevel(enclosingElement) }
+                .isA<KSPropertyDeclaration>()
+                .get { parentDeclaration == null }
                 .isTrue()
         }
     }

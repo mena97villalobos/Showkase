@@ -1,15 +1,15 @@
 package com.airbnb.android.showkase.processor.writer
 
-import androidx.room.compiler.processing.XElement
-import androidx.room.compiler.processing.XFiler
-import androidx.room.compiler.processing.XProcessingEnv
-import androidx.room.compiler.processing.addOriginatingElement
-import androidx.room.compiler.processing.isTypeElement
-import androidx.room.compiler.processing.writeTo
 import com.airbnb.android.showkase.annotation.ShowkaseMultiPreviewCodegenMetadata
 import com.airbnb.android.showkase.annotation.ShowkaseRootCodegen
 import com.airbnb.android.showkase.processor.ShowkaseGeneratedMetadata
 import com.airbnb.android.showkase.processor.ShowkaseProcessor
+import com.airbnb.android.showkase.processor.utils.getAsInt
+import com.airbnb.android.showkase.processor.utils.getAsString
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -19,9 +19,11 @@ import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
+import com.squareup.kotlinpoet.ksp.writeTo
 import java.util.Locale
 
-internal class ShowkaseBrowserWriter(private val environment: XProcessingEnv) {
+internal class ShowkaseBrowserWriter(private val codeGenerator: CodeGenerator) {
     @Suppress("LongMethod", "LongParameterList")
     internal fun generateShowkaseBrowserFile(
         allShowkaseBrowserProperties: ShowkaseBrowserProperties,
@@ -46,7 +48,7 @@ internal class ShowkaseBrowserWriter(private val environment: XProcessingEnv) {
         )
 
         writeFile(
-            environment,
+            codeGenerator,
             fileBuilder,
             SHOWKASE_PROVIDER_CLASS_NAME,
             showkaseComponentsListClassName,
@@ -160,16 +162,17 @@ internal class ShowkaseBrowserWriter(private val environment: XProcessingEnv) {
         .build()
 
     // This is to aggregate metadata for the custom annotation annotated with Preview
-    internal fun writeCustomAnnotationElementToMetadata(element: XElement) {
-        if (!element.isTypeElement()) return
-        if (element.isAnnotationClass() && element.qualifiedName == ShowkaseProcessor.PREVIEW_CLASS_NAME) return
+    internal fun writeCustomAnnotationElementToMetadata(element: KSAnnotated) {
+        if (element !is KSClassDeclaration) return
+        val qualifiedName = element.qualifiedName?.asString() ?: return
+        if (element.classKind == ClassKind.ANNOTATION_CLASS && qualifiedName == ShowkaseProcessor.PREVIEW_CLASS_NAME) return
 
-        val moduleName = "Showkase_${element.qualifiedName.replace(".", "_")}"
+        val moduleName = "Showkase_${qualifiedName.replace(".", "_")}"
         val generatedClassName =
             "ShowkaseMetadata_${moduleName.lowercase(Locale.getDefault())}"
 
         val previewAnnotations =
-            element.getAllAnnotations().filter { it.name == ShowkaseProcessor.PREVIEW_SIMPLE_NAME }
+            element.annotations.filter { it.shortName.asString() == ShowkaseProcessor.PREVIEW_SIMPLE_NAME }.toList()
 
         val fileBuilder = FileSpec.builder(
             ShowkaseProcessor.CODEGEN_PACKAGE_NAME,
@@ -177,27 +180,27 @@ internal class ShowkaseBrowserWriter(private val environment: XProcessingEnv) {
         )
 
         val functions = previewAnnotations.mapIndexed { index, xAnnotation ->
-            FunSpec.builder("${xAnnotation.name}_$index")
+            FunSpec.builder("${xAnnotation.shortName.asString()}_$index")
                 .addAnnotation(
                     AnnotationSpec
                         .builder(ShowkaseMultiPreviewCodegenMetadata::class)
                         .addMember("previewName = %S", xAnnotation.getAsString("name"))
                         .addMember("previewGroup = %S", xAnnotation.getAsString("group"))
-                        .addMember("supportTypeQualifiedName = %S", element.qualifiedName)
+                        .addMember("supportTypeQualifiedName = %S", qualifiedName)
                         .addMember("showkaseWidth = %L", xAnnotation.getAsInt("widthDp"))
                         .addMember("showkaseHeight = %L", xAnnotation.getAsInt("heightDp"))
-                        .addMember("packageName = %S", element.packageName)
+                        .addMember("packageName = %S", element.packageName.asString())
                         .build()
                 ).build()
         }
 
         fileBuilder.addType(
             with(TypeSpec.classBuilder(generatedClassName).addFunctions(functions)) {
-                addOriginatingElement(element)
+                element.containingFile?.let { addOriginatingKSFile(it) }
                 build()
             }
         ).addFileComment("This is an auto-generated file. Please do not edit/modify this file.")
-        fileBuilder.build().writeTo(environment.filer, mode = XFiler.Mode.Aggregating)
+        fileBuilder.build().writeTo(codeGenerator, aggregating = true)
     }
 
     companion object {

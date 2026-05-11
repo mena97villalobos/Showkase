@@ -1,5 +1,5 @@
 package com.airbnb.android.showkase.processor.exceptions
 
-import androidx.room.compiler.processing.XElement
+import com.google.devtools.ksp.symbol.KSNode
 
-internal class ShowkaseProcessorException(message: String, val element: XElement? = null) : Exception(message)
+internal class ShowkaseProcessorException(message: String, val element: KSNode? = null) : Exception(message)

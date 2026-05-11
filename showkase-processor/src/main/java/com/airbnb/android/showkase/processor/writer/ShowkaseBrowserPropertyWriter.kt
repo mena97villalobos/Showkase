@@ -1,20 +1,20 @@
 package com.airbnb.android.showkase.processor.writer
 
-import androidx.room.compiler.processing.XFiler
-import androidx.room.compiler.processing.XProcessingEnv
-import androidx.room.compiler.processing.addOriginatingElement
-import androidx.room.compiler.processing.writeTo
 import com.airbnb.android.showkase.processor.ShowkaseGeneratedMetadata
 import com.airbnb.android.showkase.processor.ShowkaseGeneratedMetadataType
 import com.airbnb.android.showkase.processor.models.ShowkaseMetadata
+import com.airbnb.android.showkase.processor.utils.containingFileOrNull
+import com.google.devtools.ksp.processing.CodeGenerator
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
+import com.squareup.kotlinpoet.ksp.writeTo
 
-class ShowkaseBrowserPropertyWriter(private val environment: XProcessingEnv) {
+class ShowkaseBrowserPropertyWriter(private val codeGenerator: CodeGenerator) {
     @Suppress("LongMethod")
     internal fun generateMetadataPropertyFiles(
         componentMetadata: Set<ShowkaseMetadata.Component>,
@@ -137,7 +137,9 @@ class ShowkaseBrowserPropertyWriter(private val environment: XProcessingEnv) {
         }
             .build()
     )
-        .addOriginatingElement(showkaseMetadata.element)
+        .apply {
+            showkaseMetadata.element.containingFileOrNull()?.let { addOriginatingKSFile(it) }
+        }
         .build()
 
     private fun getPropertyForComponentWithoutParameter(
@@ -156,7 +158,9 @@ class ShowkaseBrowserPropertyWriter(private val environment: XProcessingEnv) {
                 }
                     .build()
             )
-            .addOriginatingElement(showkaseMetadata.element)
+            .apply {
+                showkaseMetadata.element.containingFileOrNull()?.let { addOriginatingKSFile(it) }
+            }
             .build()
         return property
     }
@@ -178,7 +182,9 @@ class ShowkaseBrowserPropertyWriter(private val environment: XProcessingEnv) {
                     .build()
             )
         }
-            .addOriginatingElement(showkaseMetadata.element)
+            .apply {
+                showkaseMetadata.element.containingFileOrNull()?.let { addOriginatingKSFile(it) }
+            }
             .build()
     }
 
@@ -186,8 +192,7 @@ class ShowkaseBrowserPropertyWriter(private val environment: XProcessingEnv) {
         propertySpec: PropertySpec,
     ) {
         addProperty(propertySpec)
-        build()
-            .writeTo(environment.filer, mode = XFiler.Mode.Isolating)
+        build().writeTo(codeGenerator, aggregating = false)
     }
 
     private fun CodeBlock.Builder.addPreviewProviderComponent(withParameterMetadata: ShowkaseMetadata.Component) {

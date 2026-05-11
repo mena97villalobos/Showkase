@@ -1,8 +1,7 @@
 package com.airbnb.android.showkase.processor.logging
 
-import androidx.room.compiler.processing.XMessager
 import com.airbnb.android.showkase.processor.exceptions.ShowkaseProcessorException
-import javax.tools.Diagnostic
+import com.google.devtools.ksp.processing.KSPLogger
 
 internal class ShowkaseExceptionLogger {
     private val loggedExceptions: MutableList<Exception> = mutableListOf()
@@ -20,14 +19,14 @@ internal class ShowkaseExceptionLogger {
         loggedExceptions += e
     }
 
-    internal fun publishMessages(messager: XMessager) {
+    internal fun publishMessages(logger: KSPLogger) {
         loggedExceptions.forEach {
             if (it is ShowkaseProcessorException && it.element != null) {
-                messager.printMessage(Diagnostic.Kind.ERROR, "${it.message}", it.element)
+                logger.error("${it.message}", it.element)
             } else {
-                messager.printMessage(Diagnostic.Kind.ERROR, "${it.message}")
+                logger.error("${it.message}")
             }
         }
-        loggedInfoMessage.forEach { messager.printMessage(Diagnostic.Kind.NOTE, it) }
+        loggedInfoMessage.forEach { logger.info(it) }
     }
 }

@@ -1,25 +1,24 @@
 package com.airbnb.android.showkase.processor.writer
 
-import androidx.room.compiler.processing.XFiler
-import androidx.room.compiler.processing.XProcessingEnv
-import androidx.room.compiler.processing.XTypeElement
-import androidx.room.compiler.processing.addOriginatingElement
-import androidx.room.compiler.processing.writeTo
 import com.airbnb.android.showkase.processor.writer.ShowkaseBrowserWriter.Companion.SHOWKASE_MODELS_PACKAGE_NAME
 import com.airbnb.android.showkase.processor.writer.ShowkaseBrowserWriter.Companion.SHOWKASE_PROVIDER_CLASS_NAME
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
+import com.squareup.kotlinpoet.ksp.writeTo
 
 internal class ShowkaseExtensionFunctionsWriter(
-    private val environment: XProcessingEnv
+    private val codeGenerator: CodeGenerator
 ) {
     internal fun generateShowkaseExtensionFunctions(
         rootModulePackageName: String,
         rootModuleClassName: String,
-        rootElement: XTypeElement
+        rootElement: KSClassDeclaration
     ) {
-        getFileBuilder(
+        val fileBuilder = getFileBuilder(
             rootModulePackageName,
             "${rootModuleClassName}$SHOWKASE_METHODS_SUFFIX"
         )
@@ -36,14 +35,18 @@ internal class ShowkaseExtensionFunctionsWriter(
                     "$rootModulePackageName.$rootModuleClassName"
                 )
             )
-            .build()
-            .writeTo(environment.filer, mode = XFiler.Mode.Aggregating)
+
+        rootElement.containingFile?.let { fileBuilder.addFileComment("").build() }
+        val built = fileBuilder.build()
+        // Originating files for FunSpecs are picked up via the FileSpec automatically when
+        // FunSpec.Builder.addOriginatingKSFile is used.
+        built.writeTo(codeGenerator, aggregating = true)
     }
 
     private fun generateIntentFunction(
         rootModulePackageName: String,
         rootModuleClassName: String,
-        rootElement: XTypeElement,
+        rootElement: KSClassDeclaration,
     ) = FunSpec.builder(INTENT_FUNCTION_NAME).apply {
         addParameter(
             CONTEXT_PARAMETER_NAME, CONTEXT_CLASS_NAME
@@ -72,12 +75,12 @@ internal class ShowkaseExtensionFunctionsWriter(
                 .unindent()
                 .build()
         )
-        addOriginatingElement(rootElement)
+        rootElement.containingFile?.let { addOriginatingKSFile(it) }
     }
         .build()
 
     private fun generateMetadataFunction(
-        rootElement: XTypeElement,
+        rootElement: KSClassDeclaration,
         classKey: String
     ) = FunSpec.builder(METADATA_FUNCTION_NAME).apply {
         val errorMessage = "The class wasn't generated correctly. Make sure that you have setup " +
@@ -109,7 +112,7 @@ internal class ShowkaseExtensionFunctionsWriter(
                 .unindent()
                 .build()
         )
-        addOriginatingElement(rootElement)
+        rootElement.containingFile?.let { addOriginatingKSFile(it) }
     }
         .build()
 

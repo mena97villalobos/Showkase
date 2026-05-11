@@ -1,12 +1,5 @@
 package com.airbnb.android.showkase.processor.models
 
-import androidx.room.compiler.processing.XAnnotation
-import androidx.room.compiler.processing.XElement
-import androidx.room.compiler.processing.XFieldElement
-import androidx.room.compiler.processing.XMemberContainer
-import androidx.room.compiler.processing.XMethodElement
-import androidx.room.compiler.processing.XType
-import androidx.room.compiler.processing.XTypeElement
 import com.airbnb.android.showkase.annotation.ScreenshotCaptureConfig
 import com.airbnb.android.showkase.annotation.ScreenshotCaptureType
 import com.airbnb.android.showkase.annotation.ScreenshotConfig
@@ -18,17 +11,38 @@ import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.PREVIEW
 import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.PREVIEW_SIMPLE_NAME
 import com.airbnb.android.showkase.processor.exceptions.ShowkaseProcessorException
 import com.airbnb.android.showkase.processor.logging.ShowkaseValidator
+import com.airbnb.android.showkase.processor.utils.annotationDeclaration
 import com.airbnb.android.showkase.processor.utils.findAnnotationBySimpleName
+import com.airbnb.android.showkase.processor.utils.getAnnotation
+import com.airbnb.android.showkase.processor.utils.getAnnotations
+import com.airbnb.android.showkase.processor.utils.getAsAnnotation
+import com.airbnb.android.showkase.processor.utils.getAsBoolean
+import com.airbnb.android.showkase.processor.utils.getAsEnum
+import com.airbnb.android.showkase.processor.utils.getAsInt
+import com.airbnb.android.showkase.processor.utils.getAsIntList
+import com.airbnb.android.showkase.processor.utils.getAsString
+import com.airbnb.android.showkase.processor.utils.getAsStringList
+import com.airbnb.android.showkase.processor.utils.getAsType
+import com.airbnb.android.showkase.processor.utils.getAsTypeList
+import com.airbnb.android.showkase.processor.utils.requireAnnotation
 import com.airbnb.android.showkase.processor.utils.requireAnnotationBySimpleName
+import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.javapoet.toKClassName
-import com.squareup.kotlinpoet.javapoet.toKTypeName
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
 import java.util.Locale
 
 @Suppress("LongParameterList")
 internal sealed class ShowkaseMetadata {
-    abstract val element: XElement
+    abstract val element: KSAnnotated
     abstract val packageName: String
     abstract val packageSimpleName: String
     abstract val elementName: String
@@ -44,7 +58,7 @@ internal sealed class ShowkaseMetadata {
         get() = enclosingClassName?.let { "${it}_$elementName" } ?: "${packageName}_$elementName"
 
     data class Component(
-        override val element: XElement,
+        override val element: KSAnnotated,
         override val packageName: String,
         override val packageSimpleName: String,
         override val elementName: String,
@@ -67,7 +81,7 @@ internal sealed class ShowkaseMetadata {
     ) : ShowkaseMetadata()
 
     data class Color(
-        override val element: XElement,
+        override val element: KSAnnotated,
         override val packageSimpleName: String,
         override val packageName: String,
         override val elementName: String,
@@ -80,7 +94,7 @@ internal sealed class ShowkaseMetadata {
     ) : ShowkaseMetadata()
 
     data class Typography(
-        override val element: XElement,
+        override val element: KSAnnotated,
         override val packageSimpleName: String,
         override val packageName: String,
         override val elementName: String,
@@ -109,7 +123,7 @@ internal enum class ShowkaseMetadataType {
     TYPOGRAPHY
 }
 
-internal fun XAnnotation.getCodegenMetadataTypes(): Pair<XType?, XType?> {
+internal fun KSAnnotation.getCodegenMetadataTypes(): Pair<KSType?, KSType?> {
     return Pair(
         getAsTypeList("enclosingClass").firstOrNull(),
         getAsTypeList("previewParameterClass").firstOrNull()
@@ -122,10 +136,11 @@ private fun Int.parseAnnotationProperty() = when (this) {
 }
 
 internal fun getShowkaseMetadata(
-    element: XMethodElement,
+    element: KSFunctionDeclaration,
     showkaseValidator: ShowkaseValidator
 ): List<ShowkaseMetadata.Component?> {
     val showkaseAnnotations = element.getAnnotations(ShowkaseComposable::class)
+    val elementName = element.simpleName.asString()
 
     val commonMetadata = element.extractCommonMetadata(showkaseValidator)
     val previewParameterMetadata = element.getPreviewParameterMetadata()
@@ -134,7 +149,7 @@ internal fun getShowkaseMetadata(
         // If this component was configured to be skipped, return early
         if (annotation.getAsBoolean("skip")) return@mapNotNull null
 
-        val showkaseName = getShowkaseName(annotation.getAsString("name"), element.name)
+        val showkaseName = getShowkaseName(annotation.getAsString("name"), elementName)
         val showkaseGroup = getShowkaseGroup(
             annotation.getAsString("group"),
             commonMetadata.enclosingClass,
@@ -148,7 +163,7 @@ internal fun getShowkaseMetadata(
             packageSimpleName = commonMetadata.moduleName,
             packageName = commonMetadata.packageName,
             enclosingClassName = commonMetadata.enclosingClassName,
-            elementName = element.name,
+            elementName = elementName,
             showkaseName = showkaseName,
             showkaseGroup = showkaseGroup,
             showkaseStyleName = showkaseStyleName,
@@ -169,11 +184,11 @@ internal fun getShowkaseMetadata(
     }
 }
 
-private fun screenshotConfigFrom(annotation: XAnnotation): ScreenshotConfig {
+private fun screenshotConfigFrom(annotation: KSAnnotation): ScreenshotConfig {
     val screenshotCaptureConfig =
         annotation.getAsAnnotation(ShowkaseComposable::screenshotCaptureConfig.name)
     val screenshotCaptureType = ScreenshotCaptureType.valueOf(
-        screenshotCaptureConfig.getAsEnum(ScreenshotCaptureConfig::type.name).name
+        screenshotCaptureConfig.getAsEnum<ScreenshotCaptureType>(ScreenshotCaptureConfig::type.name).name
     )
     val gifDurationMillis =
         screenshotCaptureConfig.getAsInt(ScreenshotCaptureConfig::durationMillis.name)
@@ -196,26 +211,28 @@ private fun screenshotConfigFrom(annotation: XAnnotation): ScreenshotConfig {
     return screenshotConfig
 }
 
-internal fun XMethodElement.extractCommonMetadata(showkaseValidator: ShowkaseValidator): CommonMetadata {
-    return extractCommonMetadata(enclosingElement, showkaseValidator)
+internal fun KSFunctionDeclaration.extractCommonMetadata(showkaseValidator: ShowkaseValidator): CommonMetadata {
+    return extractCommonMetadataFromDeclaration(this, showkaseValidator)
 }
 
-internal fun XFieldElement.extractCommonMetadata(showkaseValidator: ShowkaseValidator): CommonMetadata {
-    return extractCommonMetadata(enclosingElement, showkaseValidator)
+internal fun KSPropertyDeclaration.extractCommonMetadata(showkaseValidator: ShowkaseValidator): CommonMetadata {
+    return extractCommonMetadataFromDeclaration(this, showkaseValidator)
 }
 
-internal fun XElement.extractCommonMetadata(
-    enclosingElement: XMemberContainer,
-    showkaseValidator: ShowkaseValidator
+private fun extractCommonMetadataFromDeclaration(
+    declaration: KSDeclaration,
+    showkaseValidator: ShowkaseValidator,
 ): CommonMetadata {
-    val showkaseFunctionType: ShowkaseFunctionType = getShowkaseFunctionType(enclosingElement)
+    val parent = declaration.parentDeclaration
+    val showkaseFunctionType = getShowkaseFunctionType(declaration, parent)
+    val packageName = declaration.packageName.asString()
 
     return CommonMetadata(
-        packageName = enclosingElement.className.packageName(),
-        moduleName = enclosingElement.className.packageName().substringAfterLast("."),
-        kDoc = docComment.orEmpty().trim(),
+        packageName = packageName,
+        moduleName = packageName.substringAfterLast("."),
+        kDoc = declaration.docString.orEmpty().trim(),
         showkaseFunctionType = showkaseFunctionType,
-        enclosingClass = getEnclosingClass(showkaseFunctionType, enclosingElement)
+        enclosingClass = getEnclosingClass(showkaseFunctionType, parent)
     ).also {
         showkaseValidator.validateEnclosingClass(it.enclosingClass)
     }
@@ -226,17 +243,18 @@ internal data class CommonMetadata(
     val moduleName: String,
     val kDoc: String,
     val showkaseFunctionType: ShowkaseFunctionType,
-    val enclosingClass: XTypeElement?,
+    val enclosingClass: KSClassDeclaration?,
 ) {
-    val enclosingClassName: ClassName? = enclosingClass?.className?.toKClassName()
+    val enclosingClassName: ClassName? = enclosingClass?.toClassName()
 }
 
 @Suppress("LongParameterList", "LongMethod")
 internal fun getShowkaseMetadataFromPreview(
-    element: XMethodElement,
+    element: KSFunctionDeclaration,
     showkaseValidator: ShowkaseValidator,
 ): List<ShowkaseMetadata.Component?> {
     val previewAnnotations = element.requireAnnotationBySimpleName(PREVIEW_SIMPLE_NAME)
+    val elementName = element.simpleName.asString()
 
     val showkaseComosableAnnotation = element.getAnnotation(ShowkaseComposable::class)
     // If this component was configured to be skipped, return early
@@ -247,7 +265,7 @@ internal fun getShowkaseMetadataFromPreview(
         val commonMetadata = element.extractCommonMetadata(showkaseValidator)
         val showkaseName = getShowkaseName(
             annotation.getAsString("name"),
-            element.name
+            elementName
         )
         val showkaseGroup = getShowkaseGroup(
             annotation.getAsString("group"),
@@ -263,7 +281,7 @@ internal fun getShowkaseMetadataFromPreview(
             packageSimpleName = commonMetadata.moduleName,
             packageName = commonMetadata.packageName,
             enclosingClassName = commonMetadata.enclosingClassName,
-            elementName = element.name,
+            elementName = elementName,
             showkaseKDoc = commonMetadata.kDoc,
             showkaseName = showkaseName,
             showkaseGroup = showkaseGroup,
@@ -280,14 +298,15 @@ internal fun getShowkaseMetadataFromPreview(
 }
 
 internal fun getShowkaseMetadataFromCustomAnnotation(
-    element: XMethodElement,
+    element: KSFunctionDeclaration,
     showkaseValidator: ShowkaseValidator,
     annotationName: String,
 ): List<ShowkaseMetadata.Component> {
     val customAnnotation = element.requireAnnotationBySimpleName(annotationName)
+    val elementName = element.simpleName.asString()
 
     val previewAnnotations = customAnnotation.map {
-        it.typeElement.requireAnnotationBySimpleName(PREVIEW_SIMPLE_NAME)
+        it.annotationDeclaration().requireAnnotationBySimpleName(PREVIEW_SIMPLE_NAME)
     }.flatten()
 
     val showkaseComosableAnnotation = element.getAnnotation(ShowkaseComposable::class)
@@ -302,7 +321,7 @@ internal fun getShowkaseMetadataFromCustomAnnotation(
         val annotationHasName = annotationNameParam.isNotEmpty()
         val showkaseNameFromAnnotation = if (annotationHasName) annotationNameParam else index
 
-        val showkaseName = "${element.name} - $showkaseNameFromAnnotation"
+        val showkaseName = "$elementName - $showkaseNameFromAnnotation"
         val showkaseGroup = getShowkaseGroup(
             annotation.getAsString("group"),
             commonMetadata.enclosingClass,
@@ -317,7 +336,7 @@ internal fun getShowkaseMetadataFromCustomAnnotation(
             packageSimpleName = commonMetadata.moduleName,
             packageName = commonMetadata.packageName,
             enclosingClassName = commonMetadata.enclosingClassName,
-            elementName = element.name,
+            elementName = elementName,
             showkaseKDoc = commonMetadata.kDoc,
             showkaseName = showkaseName,
             showkaseGroup = showkaseGroup,
@@ -334,7 +353,7 @@ internal fun getShowkaseMetadataFromCustomAnnotation(
 }
 
 internal fun getShowkaseMetadata(
-    xElement: XMethodElement,
+    xElement: KSFunctionDeclaration,
     customPreviewMetadata: ShowkaseMultiPreviewCodegenMetadata,
     elementIndex: Int,
     index: Int,
@@ -354,13 +373,14 @@ internal fun getShowkaseMetadata(
     } else {
         customPreviewMetadata.showkaseWidth
     }
+    val elementName = xElement.simpleName.asString()
 
     return ShowkaseMetadata.Component(
         element = xElement,
-        elementName = xElement.name,
+        elementName = elementName,
         packageName = commonMetadata.packageName,
         packageSimpleName = commonMetadata.moduleName,
-        showkaseName = "${xElement.name} - ${customPreviewMetadata.previewName} - $elementIndex",
+        showkaseName = "$elementName - ${customPreviewMetadata.previewName} - $elementIndex",
         insideObject = commonMetadata.showkaseFunctionType.insideObject(),
         previewParameterName = previewParamMetadata?.first,
         previewParameterProviderType = previewParamMetadata?.second,
@@ -377,26 +397,24 @@ internal fun getShowkaseMetadata(
     )
 }
 
-private fun XMethodElement.getPreviewParameterMetadata(): Pair<String, TypeName>? {
+private fun KSFunctionDeclaration.getPreviewParameterMetadata(): Pair<String, TypeName>? {
     val previewParameterPair = getPreviewParameterAnnotation()
     return previewParameterPair?.let {
-        it.first to it.second.getAsType("provider")
-            .typeName
-            .toKTypeName()
+        it.first to it.second.getAsType("provider").toTypeName()
     }
 }
 
-private fun XMethodElement.getPreviewParameterAnnotation(): Pair<String, XAnnotation>? {
+private fun KSFunctionDeclaration.getPreviewParameterAnnotation(): Pair<String, KSAnnotation>? {
     return parameters.mapNotNull { parameter ->
         val previewParamAnnotation = parameter.findAnnotationBySimpleName(PREVIEW_PARAMETER_SIMPLE_NAME)
         previewParamAnnotation?.let {
-            parameter.name to previewParamAnnotation
+            (parameter.name?.asString() ?: "") to previewParamAnnotation
         }
     }.firstOrNull()
 }
 
 internal fun getShowkaseColorMetadata(
-    element: XFieldElement,
+    element: KSPropertyDeclaration,
     showkaseValidator: ShowkaseValidator
 ): ShowkaseMetadata {
     val showkaseColorAnnotation = element.requireAnnotation(ShowkaseColor::class)
@@ -404,7 +422,8 @@ internal fun getShowkaseColorMetadata(
     // because the properties are generated outside the companion object in java land(as opposed to
     // inside the companion class for functions). Need to investigate more.
     val commonMetadata = element.extractCommonMetadata(showkaseValidator)
-    val showkaseName = getShowkaseName(showkaseColorAnnotation.getAsString("name"), element.name)
+    val elementName = element.simpleName.asString()
+    val showkaseName = getShowkaseName(showkaseColorAnnotation.getAsString("name"), elementName)
     val showkaseGroup = getShowkaseGroup(showkaseColorAnnotation.getAsString("group"), commonMetadata.enclosingClass)
 
     return ShowkaseMetadata.Color(
@@ -412,7 +431,7 @@ internal fun getShowkaseColorMetadata(
         showkaseName = showkaseName,
         showkaseGroup = showkaseGroup,
         showkaseKDoc = commonMetadata.kDoc,
-        elementName = element.name,
+        elementName = elementName,
         packageSimpleName = commonMetadata.moduleName,
         packageName = commonMetadata.packageName,
         enclosingClassName = commonMetadata.enclosingClassName,
@@ -422,16 +441,17 @@ internal fun getShowkaseColorMetadata(
 }
 
 internal fun getShowkaseTypographyMetadata(
-    element: XFieldElement,
+    element: KSPropertyDeclaration,
     showkaseValidator: ShowkaseValidator
 ): ShowkaseMetadata {
     val showkaseTypographyAnnotation = element.requireAnnotation(ShowkaseTypography::class)
 
     val commonMetadata = element.extractCommonMetadata(showkaseValidator)
+    val elementName = element.simpleName.asString()
     // TODO(vinaygaba): Typography properties aren't working properly with companion objects.
     // This is because the properties are generated outside the companion object in java land(as
     // opposed to inside the companion class for functions). Need to investigate more.
-    val showkaseName = getShowkaseName(showkaseTypographyAnnotation.getAsString("name"), element.name)
+    val showkaseName = getShowkaseName(showkaseTypographyAnnotation.getAsString("name"), elementName)
     val showkaseGroup =
         getShowkaseGroup(showkaseTypographyAnnotation.getAsString("group"), commonMetadata.enclosingClass)
 
@@ -440,7 +460,7 @@ internal fun getShowkaseTypographyMetadata(
         showkaseName = showkaseName,
         showkaseGroup = showkaseGroup,
         showkaseKDoc = commonMetadata.kDoc,
-        elementName = element.name,
+        elementName = elementName,
         packageSimpleName = commonMetadata.moduleName,
         packageName = commonMetadata.packageName,
         enclosingClassName = commonMetadata.enclosingClassName,
@@ -449,37 +469,33 @@ internal fun getShowkaseTypographyMetadata(
     )
 }
 
-internal fun XElement.getShowkaseFunctionType(enclosingElement: XMemberContainer): ShowkaseFunctionType {
+internal fun getShowkaseFunctionType(
+    declaration: KSDeclaration,
+    parent: KSDeclaration?
+): ShowkaseFunctionType {
     return when {
-        this.isTopLevel(enclosingElement) -> ShowkaseFunctionType.TOP_LEVEL
-        (enclosingElement as? XTypeElement)?.isCompanionObject() == true ->
-            ShowkaseFunctionType.INSIDE_COMPANION_OBJECT
-
-        (enclosingElement as? XTypeElement)?.isKotlinObject() == true -> ShowkaseFunctionType.INSIDE_OBJECT
-        enclosingElement is XTypeElement -> ShowkaseFunctionType.INSIDE_CLASS
+        parent !is KSClassDeclaration -> ShowkaseFunctionType.TOP_LEVEL
+        parent.isCompanionObject -> ShowkaseFunctionType.INSIDE_COMPANION_OBJECT
+        parent.classKind == ClassKind.OBJECT -> ShowkaseFunctionType.INSIDE_OBJECT
+        parent.classKind == ClassKind.CLASS || parent.classKind == ClassKind.INTERFACE ->
+            ShowkaseFunctionType.INSIDE_CLASS
         else -> throw ShowkaseProcessorException(
             "Function is declared in a way that is not supported by Showkase.",
-            this
+            declaration
         )
     }
 }
 
-fun XElement.isTopLevel(enclosingElement: XMemberContainer): Boolean {
-    // Per enclosingElement kdoc:
-    // When running with KSP, if this function is in source, the value will NOT be an XTypeElement.
-    // We don't expect to handle functions from classpath because we only process annotations in source
-    return enclosingElement !is XTypeElement
-}
-
 internal fun getEnclosingClass(
     showkaseFunctionType: ShowkaseFunctionType,
-    enclosingElement: XMemberContainer
-): XTypeElement? = when (showkaseFunctionType) {
+    parent: KSDeclaration?,
+): KSClassDeclaration? = when (showkaseFunctionType) {
     ShowkaseFunctionType.TOP_LEVEL -> null
-    ShowkaseFunctionType.INSIDE_CLASS, ShowkaseFunctionType.INSIDE_OBJECT -> enclosingElement as XTypeElement
+    ShowkaseFunctionType.INSIDE_CLASS, ShowkaseFunctionType.INSIDE_OBJECT -> parent as KSClassDeclaration
     // Get the class that holds the companion object instead of using the intermediate element
     // that's used to represent the companion object.
-    ShowkaseFunctionType.INSIDE_COMPANION_OBJECT -> (enclosingElement as XTypeElement).enclosingTypeElement
+    ShowkaseFunctionType.INSIDE_COMPANION_OBJECT ->
+        (parent as KSClassDeclaration).parentDeclaration as? KSClassDeclaration
 }
 
 internal fun getShowkaseName(
@@ -492,12 +508,11 @@ internal fun getShowkaseName(
 
 internal fun getShowkaseGroup(
     showkaseGroupFromAnnotation: String,
-    enclosingClass: XTypeElement?,
+    enclosingClass: KSClassDeclaration?,
 ) = when {
     showkaseGroupFromAnnotation.isNotBlank() -> showkaseGroupFromAnnotation
-    showkaseGroupFromAnnotation.isBlank() && enclosingClass != null -> enclosingClass.name.capitalize(
-        Locale.getDefault()
-    )
+    showkaseGroupFromAnnotation.isBlank() && enclosingClass != null ->
+        enclosingClass.simpleName.asString().capitalize(Locale.getDefault())
 
     else -> "Default Group"
 }

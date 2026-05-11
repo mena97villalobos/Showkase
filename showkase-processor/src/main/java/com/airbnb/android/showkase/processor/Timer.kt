@@ -1,7 +1,6 @@
 package com.airbnb.android.showkase.processor
 
-import androidx.room.compiler.processing.XMessager
-import javax.tools.Diagnostic
+import com.google.devtools.ksp.processing.KSPLogger
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -24,7 +23,7 @@ class Timer(val name: String) {
         timingSteps.add(TimingStep(nowNanos - lastNanos, stepDescription))
     }
 
-    fun finishAndPrint(messager: XMessager) {
+    fun finishAndPrint(logger: KSPLogger) {
         val start = startNanos ?: error("Timer was not started")
         val message = buildString {
             appendLine("$name finished in ${formatNanos(System.nanoTime() - start)}")
@@ -33,7 +32,7 @@ class Timer(val name: String) {
             }
         }
 
-        messager.printMessage(Diagnostic.Kind.OTHER, message)
+        logger.info(message)
     }
 
     private class TimingStep(val durationNanos: Long, val description: String)

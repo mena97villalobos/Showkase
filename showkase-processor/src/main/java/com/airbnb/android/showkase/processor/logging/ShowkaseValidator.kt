@@ -1,14 +1,5 @@
 package com.airbnb.android.showkase.processor.logging
 
-import androidx.room.compiler.processing.XElement
-import androidx.room.compiler.processing.XFieldElement
-import androidx.room.compiler.processing.XMethodElement
-import androidx.room.compiler.processing.XProcessingEnv
-import androidx.room.compiler.processing.XType
-import androidx.room.compiler.processing.XTypeElement
-import androidx.room.compiler.processing.isField
-import androidx.room.compiler.processing.isMethod
-import androidx.room.compiler.processing.isTypeElement
 import com.airbnb.android.showkase.annotation.ShowkaseComposable
 import com.airbnb.android.showkase.annotation.ShowkaseRoot
 import com.airbnb.android.showkase.annotation.ShowkaseRootModule
@@ -18,24 +9,46 @@ import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.COMPOSA
 import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.PREVIEW_PARAMETER_SIMPLE_NAME
 import com.airbnb.android.showkase.processor.exceptions.ShowkaseProcessorException
 import com.airbnb.android.showkase.processor.utils.findAnnotationBySimpleName
+import com.airbnb.android.showkase.processor.utils.isSameTypeAs
 import com.airbnb.android.showkase.processor.writer.ShowkaseBrowserProperties
+import com.google.devtools.ksp.getConstructors
+import com.google.devtools.ksp.isOpen
+import com.google.devtools.ksp.isPrivate
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import kotlin.contracts.contract
 
-internal class ShowkaseValidator(private val environment: XProcessingEnv) {
+internal class ShowkaseValidator(private val resolverProvider: () -> Resolver) {
 
-    private val colorType by lazy { environment.requireType("androidx.compose.ui.graphics.Color") }
+    private val resolver: Resolver get() = resolverProvider()
+
+    private fun requireType(qualifiedName: String): KSType =
+        resolver.getClassDeclarationByName(resolver.getKSNameFromString(qualifiedName))
+            ?.asStarProjectedType()
+            ?: error("Type not found: $qualifiedName")
+
+    private fun findType(qualifiedName: String): KSType? =
+        resolver.getClassDeclarationByName(resolver.getKSNameFromString(qualifiedName))
+            ?.asStarProjectedType()
+
+    private val colorType by lazy { requireType("androidx.compose.ui.graphics.Color") }
 
     @Suppress("ThrowsCount")
     internal fun validateComponentElementOrSkip(
-        element: XElement,
+        element: KSAnnotated,
         annotationName: String,
         skipPrivatePreviews: Boolean = false
     ): Boolean {
         contract {
-            returns() implies (element is XMethodElement)
+            returns() implies (element is KSFunctionDeclaration)
         }
         when {
-            !element.isMethod() -> {
+            element !is KSFunctionDeclaration -> {
                 throw ShowkaseProcessorException(
                     "Only composable methods can be annotated with $annotationName",
                     element
@@ -80,11 +93,11 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     // This should check if it is an annotation that's annotated with @Preview or @ShowkaseComposable annotation
-    internal fun checkElementIsAnnotationClass(element: XElement): Boolean {
+    internal fun checkElementIsAnnotationClass(element: KSAnnotated): Boolean {
         contract {
-            returns(true) implies (element is XTypeElement)
+            returns(true) implies (element is KSClassDeclaration)
         }
-        return element.isTypeElement() && element.isAnnotationClass()
+        return element is KSClassDeclaration && element.classKind == ClassKind.ANNOTATION_CLASS
     }
 
     // We only allow composable functions who's previews meet the following criteria:
@@ -94,7 +107,7 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     // 2b. At most one parameters is annotated with @PreviewParameter
     // This is in line with the support that @Preview provides for Android Studio previews.
     private fun validateComposableParameter(
-        element: XMethodElement,
+        element: KSFunctionDeclaration,
     ): Boolean {
         // Return true if there are any non-default parameters passed to the composable function or
         // if there's more than one parameter that's annotated with @PreviewParameter
@@ -105,38 +118,39 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
         }
     }
 
-    private fun XMethodElement.validateComposableParameters(): Boolean {
+    private fun KSFunctionDeclaration.validateComposableParameters(): Boolean {
         // Divide the parameter list of a given composable function into parameters that are
         // not annotated with @PreviewParameter and ones that are annotated with it.
         val (nonPreviewParameterParameters, previewParameterParameters) =
             parameters.partition { parameter ->
-                parameter.getAllAnnotations().none { annotation ->
-                    annotation.name == PREVIEW_PARAMETER_SIMPLE_NAME
+                parameter.annotations.none { annotation ->
+                    annotation.shortName.asString() == PREVIEW_PARAMETER_SIMPLE_NAME
                 }
             }
 
         // Enforce that all parameters have default values and at most one parameters is annotated
         // with @PreviewParameter
-        return nonPreviewParameterParameters.all { it.hasDefaultValue } &&
+        return nonPreviewParameterParameters.all { it.hasDefault } &&
                 previewParameterParameters.size <= 1
     }
 
     internal fun validateColorElement(
-        element: XElement,
+        element: KSAnnotated,
         annotationName: String
     ) {
         contract {
-            returns() implies (element is XFieldElement)
+            returns() implies (element is KSPropertyDeclaration)
         }
 
-        if (!element.isField()) {
+        if (element !is KSPropertyDeclaration) {
             throw ShowkaseProcessorException(
                 "Only \"Color\" fields can be annotated with $annotationName",
                 element
             )
         }
 
-        if (element.type.rawType != colorType.rawType) {
+        val resolvedType = element.type.resolve()
+        if (!resolvedType.isSameTypeAs(colorType)) {
             throw ShowkaseProcessorException(
                 "Only \"Color\" fields can be annotated with $annotationName",
                 element
@@ -145,22 +159,22 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     internal fun validateTypographyElement(
-        element: XElement,
+        element: KSAnnotated,
         annotationName: String,
-        textStyleType: XType,
+        textStyleType: KSType,
     ) {
         contract {
-            returns() implies (element is XFieldElement)
+            returns() implies (element is KSPropertyDeclaration)
         }
         when {
-            !element.isField() -> {
+            element !is KSPropertyDeclaration -> {
                 throw ShowkaseProcessorException(
                     "Only \"TextStyle\" fields can be annotated with $annotationName",
                     element
                 )
             }
 
-            !element.type.isSameType(textStyleType) -> {
+            !element.type.resolve().isSameTypeAs(textStyleType) -> {
                 throw ShowkaseProcessorException(
                     "Only \"TextStyle\" fields can be annotated with $annotationName",
                     element
@@ -170,8 +184,7 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     internal fun validateShowkaseRootElement(
-        elementSet: Set<XElement>,
-        environment: XProcessingEnv
+        elementSet: Set<KSAnnotated>,
     ) {
         if (elementSet.isEmpty()) return
 
@@ -192,8 +205,7 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
                 requireClass(element, showkaseRootAnnotationName)
                 requireInterface(
                     element = element,
-                    interfaceType = environment
-                        .requireType(ShowkaseRootModule::class),
+                    interfaceType = requireType(ShowkaseRootModule::class.qualifiedName!!),
                     annotationName = showkaseRootAnnotationName,
                 )
             }
@@ -201,13 +213,13 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     private fun requireClass(
-        element: XElement,
+        element: KSAnnotated,
         showkaseRootAnnotationName: String,
     ) {
         contract {
-            returns() implies (element is XTypeElement)
+            returns() implies (element is KSClassDeclaration)
         }
-        if (!element.isTypeElement()) {
+        if (element !is KSClassDeclaration) {
             throw ShowkaseProcessorException(
                 "Only classes can be annotated with @$showkaseRootAnnotationName",
                 element
@@ -217,13 +229,13 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
 
     @Suppress("LongParameterList")
     private fun requireInterface(
-        element: XTypeElement,
-        interfaceType: XType,
+        element: KSClassDeclaration,
+        interfaceType: KSType,
         annotationName: String,
     ) {
-        if (!interfaceType.isAssignableFrom(element.type)) {
+        if (!interfaceType.isAssignableFrom(element.asStarProjectedType())) {
             throw ShowkaseProcessorException(
-                "Only an implementation of ${interfaceType.typeName} can be annotated " +
+                "Only an implementation of ${interfaceType.declaration.qualifiedName?.asString()} can be annotated " +
                         "with @$annotationName",
                 element
             )
@@ -231,7 +243,7 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     fun validateEnclosingClass(
-        enclosingClass: XTypeElement?,
+        enclosingClass: KSClassDeclaration?,
     ) {
         if (enclosingClass == null) return
 
@@ -248,8 +260,7 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     internal fun validateShowkaseTestElement(
-        elements: Collection<XTypeElement>,
-        environment: XProcessingEnv,
+        elements: Collection<KSClassDeclaration>,
     ): ScreenshotTestType? {
         if (elements.isEmpty()) return null
 
@@ -266,8 +277,7 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
             else -> {
                 // Safe to do this as we've ensured that there's only one element in this set
                 val element = elements.first()
-                val showkaseScreenshotTestTypeMirror = environment
-                    .requireType(SHOWKASE_SCREENSHOT_TEST_CLASS_NAME)
+                val showkaseScreenshotTestTypeMirror = requireType(SHOWKASE_SCREENSHOT_TEST_CLASS_NAME)
 
                 // Validate that the class annotated with @ShowkaseScreenshotTest is an abstract/open
                 // class
@@ -276,18 +286,19 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
                 // Validate that the class annotated with @ShowkaseScreenshot extends the
                 // ShowkaseScreenshotTest interface
                 val isShowkaseScreenshotTest =
-                    showkaseScreenshotTestTypeMirror.isAssignableFrom(element.type)
+                    showkaseScreenshotTestTypeMirror.isAssignableFrom(element.asStarProjectedType())
 
                 return if (isShowkaseScreenshotTest) {
                     ScreenshotTestType.SHOWKASE
                 } else if (
-                    environment.findType(PAPARAZZI_SHOWKASE_SCREENSHOT_TEST_CLASS_NAME)
-                        ?.isAssignableFrom(element.type) == true
+                    findType(PAPARAZZI_SHOWKASE_SCREENSHOT_TEST_CLASS_NAME)
+                        ?.isAssignableFrom(element.asStarProjectedType()) == true
                 ) {
-                    val paparazziShowkaseScreenshotTestTypeMirror = environment
-                        .requireType(PAPARAZZI_SHOWKASE_SCREENSHOT_TEST_CLASS_NAME)
+                    val paparazziShowkaseScreenshotTestTypeMirror = requireType(
+                        PAPARAZZI_SHOWKASE_SCREENSHOT_TEST_CLASS_NAME
+                    )
                     validatePaparazziShowkaseScreenshotTest(
-                        environment, element,
+                        element,
                         paparazziShowkaseScreenshotTestTypeMirror
                     )
 
@@ -309,20 +320,20 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     private fun validatePaparazziShowkaseScreenshotTest(
-        environment: XProcessingEnv,
-        element: XTypeElement,
-        paparazziShowkaseScreenshotTestTypeMirror: XType
+        element: KSClassDeclaration,
+        paparazziShowkaseScreenshotTestTypeMirror: KSType
     ) {
-        val paparazziShowkaseScreenshotTestCompanionType = environment
-            .requireType(PAPARAZZI_SHOWKASE_SCREENSHOT_TEST_COMPANION_CLASS_NAME)
+        val paparazziShowkaseScreenshotTestCompanionType =
+            requireType(PAPARAZZI_SHOWKASE_SCREENSHOT_TEST_COMPANION_CLASS_NAME)
 
-        val companionObjectTypeElements = element.getEnclosedTypeElements().filter {
-            it.isCompanionObject()
-        }
+        val companionObjectTypeElements = element.declarations
+            .filterIsInstance<KSClassDeclaration>()
+            .filter { it.isCompanionObject }
+            .toList()
         val errorMessage =
-            "Classes implementing the ${paparazziShowkaseScreenshotTestTypeMirror.typeName} " +
+            "Classes implementing the ${paparazziShowkaseScreenshotTestTypeMirror.declaration.qualifiedName?.asString()} " +
                     "interface should have a companion object that implements the " +
-                    "${paparazziShowkaseScreenshotTestCompanionType.typeName} interface."
+                    "${paparazziShowkaseScreenshotTestCompanionType.declaration.qualifiedName?.asString()} interface."
         if (companionObjectTypeElements.isEmpty()) {
             throw ShowkaseProcessorException(
                 errorMessage,
@@ -331,7 +342,7 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
         }
 
         if (!paparazziShowkaseScreenshotTestCompanionType
-                .isAssignableFrom(companionObjectTypeElements[0].type)
+                .isAssignableFrom(companionObjectTypeElements[0].asStarProjectedType())
         ) {
             throw ShowkaseProcessorException(
                 errorMessage,
@@ -341,10 +352,10 @@ internal class ShowkaseValidator(private val environment: XProcessingEnv) {
     }
 
     private fun requireOpenClass(
-        element: XTypeElement,
+        element: KSClassDeclaration,
         annotationName: String,
     ) {
-        if (element.isFinal()) {
+        if (!element.isOpen()) {
             throw ShowkaseProcessorException(
                 "Class annotated with $annotationName needs to be an abstract/open class.",
                 element

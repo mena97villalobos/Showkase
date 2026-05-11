@@ -1,8 +1,6 @@
 package com.airbnb.android.showkase.processor.writer
 
-import androidx.room.compiler.processing.XFiler
-import androidx.room.compiler.processing.XProcessingEnv
-import androidx.room.compiler.processing.writeTo
+import com.google.devtools.ksp.processing.CodeGenerator
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -14,8 +12,9 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.writeTo
 
-class PaparazziShowkaseScreenshotTestWriter(private val environment: XProcessingEnv) {
+class PaparazziShowkaseScreenshotTestWriter(private val codeGenerator: CodeGenerator) {
     @Suppress("LongParameterList")
     internal fun generateScreenshotTests(
         screenshotTestPackageName: String,
@@ -56,7 +55,7 @@ class PaparazziShowkaseScreenshotTestWriter(private val environment: XProcessing
                 }
             )
 
-        fileBuilder.build().writeTo(environment.filer, mode = XFiler.Mode.Aggregating)
+        fileBuilder.build().writeTo(codeGenerator, aggregating = true)
     }
 
     private fun TypeSpec.Builder.addPreviewProvider() {

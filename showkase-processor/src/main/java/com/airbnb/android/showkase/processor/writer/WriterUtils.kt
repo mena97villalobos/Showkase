@@ -1,12 +1,10 @@
 package com.airbnb.android.showkase.processor.writer
 
-import androidx.room.compiler.processing.XFiler
-import androidx.room.compiler.processing.XProcessingEnv
-import androidx.room.compiler.processing.addOriginatingElement
-import androidx.room.compiler.processing.writeTo
 import com.airbnb.android.showkase.annotation.ScreenshotConfig
 import com.airbnb.android.showkase.processor.exceptions.ShowkaseProcessorException
 import com.airbnb.android.showkase.processor.models.ShowkaseMetadata
+import com.airbnb.android.showkase.processor.utils.containingFileOrNull
+import com.google.devtools.ksp.processing.CodeGenerator
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -19,6 +17,8 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
+import com.squareup.kotlinpoet.ksp.writeTo
 
 val SPACE_REGEX = "\\s".toRegex()
 
@@ -49,7 +49,7 @@ internal fun getShowkaseProviderInterfaceFunction(
 
 @Suppress("LongParameterList")
 internal fun writeFile(
-    processingEnv: XProcessingEnv,
+    codeGenerator: CodeGenerator,
     fileBuilder: FileSpec.Builder,
     superInterfaceClassName: ClassName,
     showkaseComponentsListClassName: String,
@@ -67,12 +67,14 @@ internal fun writeFile(
                 addFunction(componentInterfaceFunction)
                 addFunction(colorInterfaceFunction)
                 addFunction(typographyInterfaceFunction)
-                allShowkaseBrowserProperties.zip().forEach { addOriginatingElement(it.element) }
+                allShowkaseBrowserProperties.zip().forEach { meta ->
+                    meta.element.containingFileOrNull()?.let { addOriginatingKSFile(it) }
+                }
                 build()
             }
         )
 
-    fileBuilder.build().writeTo(processingEnv.filer, mode = XFiler.Mode.Aggregating)
+    fileBuilder.build().writeTo(codeGenerator, aggregating = true)
 }
 
 internal fun ClassName.listInitializerCodeBlock(): CodeBlock.Builder {

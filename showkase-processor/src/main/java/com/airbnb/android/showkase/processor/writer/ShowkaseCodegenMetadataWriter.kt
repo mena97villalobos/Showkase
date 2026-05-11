@@ -1,20 +1,20 @@
 package com.airbnb.android.showkase.processor.writer
 
-import androidx.room.compiler.processing.XFiler
-import androidx.room.compiler.processing.XProcessingEnv
-import androidx.room.compiler.processing.addOriginatingElement
-import androidx.room.compiler.processing.writeTo
 import com.airbnb.android.showkase.annotation.ShowkaseCodegenMetadata
 import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.CODEGEN_PACKAGE_NAME
 import com.airbnb.android.showkase.processor.models.ShowkaseMetadata
 import com.airbnb.android.showkase.processor.models.ShowkaseMetadataType
+import com.airbnb.android.showkase.processor.utils.containingFileOrNull
+import com.google.devtools.ksp.processing.CodeGenerator
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
+import com.squareup.kotlinpoet.ksp.writeTo
 import java.util.Locale
 
-internal class ShowkaseCodegenMetadataWriter(private val environment: XProcessingEnv) {
+internal class ShowkaseCodegenMetadataWriter(private val codeGenerator: CodeGenerator) {
 
     internal fun generateShowkaseCodegenFunctions(
         showkaseMetadataSet: Set<ShowkaseMetadata>,
@@ -64,12 +64,14 @@ internal class ShowkaseCodegenMetadataWriter(private val environment: XProcessin
 
         fileBuilder.addType(
             with(autogenClass) {
-                showkaseMetadataSet.forEach { addOriginatingElement(it.element) }
+                showkaseMetadataSet.forEach { meta ->
+                    meta.element.containingFileOrNull()?.let { addOriginatingKSFile(it) }
+                }
                 build()
             }
         )
 
-        fileBuilder.build().writeTo(environment.filer, mode = XFiler.Mode.Aggregating)
+        fileBuilder.build().writeTo(codeGenerator, aggregating = true)
     }
 
     private fun createShowkaseCodegenMetadata(showkaseMetadata: ShowkaseMetadata): AnnotationSpec.Builder =
