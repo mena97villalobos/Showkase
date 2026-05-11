@@ -29,7 +29,7 @@ internal fun runKspProcessorTest(
     val compilation = KotlinCompilation().apply {
         this.sources = sources
         inheritClassPath = true
-        configureKsp(useKsp2 = true) {
+        configureKsp {
             symbolProcessorProviders += provider
         }
     }

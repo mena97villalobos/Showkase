@@ -30,20 +30,20 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
-import com.airbnb.android.showkase.models.ShowkaseBrowserComponent
-import com.google.testing.junit.testparameterinjector.TestParameter
-import org.junit.Rule
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.airbnb.android.showkase.models.Showkase
 import com.airbnb.android.showkase.models.ShowkaseBrowserColor
+import com.airbnb.android.showkase.models.ShowkaseBrowserComponent
 import com.airbnb.android.showkase.models.ShowkaseBrowserTypography
 import com.airbnb.android.showkase.ui.padding4x
-import java.util.*
+import com.google.testing.junit.testparameterinjector.TestParameter
+import org.junit.Rule
+import java.util.Locale
 
 /**
  * Credit to Alex Vanyo for creating this sample in the Now In Android app by Google.

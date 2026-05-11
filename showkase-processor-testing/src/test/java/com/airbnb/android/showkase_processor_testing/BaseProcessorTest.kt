@@ -44,7 +44,7 @@ abstract class BaseProcessorTest {
             sources = inputDir.listFiles()?.toList().orEmpty()
                 .map { file -> SourceFile.new(file.name, file.readText()) }
             languageVersion = "2.1"
-            configureKsp(useKsp2 = true) {
+            configureKsp {
                 symbolProcessorProviders.add(ShowkaseProcessorProvider())
                 processorOptions.putAll(options)
             }

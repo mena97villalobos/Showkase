@@ -1,8 +1,9 @@
 import com.vanniktech.maven.publish.AndroidMultiVariantLibrary
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SourcesJar
 
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
     id("com.vanniktech.maven.publish")
 }
@@ -11,9 +12,8 @@ android {
     namespace = "com.airbnb.android.showkase.models"
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 23
         compileSdk = 36
-        targetSdk = 33
     }
 
     buildFeatures {
@@ -22,7 +22,7 @@ android {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -32,5 +32,5 @@ dependencies {
 }
 
 mavenPublishing {
-    configure(AndroidMultiVariantLibrary(true, true))
+    configure(AndroidMultiVariantLibrary(JavadocJar.Empty(), SourcesJar.Sources()))
 }

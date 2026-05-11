@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("shot")
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
@@ -11,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.airbnb.android.showkasesample"
-        minSdk = 21
+        minSdk = 23
         compileSdk = 36
         targetSdk = 35
         versionCode = 1
@@ -46,7 +45,7 @@ ksp {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
     sourceSets.configureEach {
         kotlin.srcDir("build/generated/ksp/$name/kotlin")
     }
@@ -72,6 +71,7 @@ dependencies {
     implementation(libs.compose.tooling)
     implementation(libs.compose.layout)
     implementation(libs.compose.material)
+    implementation(libs.compose.materialIconsCore)
     implementation(libs.compose.savedInstanceState)
     implementation(libs.compose.uiLiveData)
     androidTestImplementation(libs.compose.uiTest)

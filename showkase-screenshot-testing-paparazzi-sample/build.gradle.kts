@@ -1,9 +1,5 @@
-import com.android.build.gradle.AbstractAppExtension
-import com.android.build.gradle.LibraryExtension
-
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
     alias(libs.plugins.paparazzi)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
@@ -13,9 +9,8 @@ android {
     namespace = "com.airbnb.android.showkase.screenshot.testing.paparazzi"
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 23
         compileSdk = 36
-        targetSdk = 33
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
 
@@ -45,59 +40,25 @@ tasks.withType<Test>().configureEach {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
+    // KSP-generated kotlin sources aren't auto-registered for kotlinc.
+    // See https://github.com/google/ksp/issues/37.
+    sourceSets.configureEach {
+        kotlin.srcDir(layout.buildDirectory.dir("generated/ksp/$name/kotlin"))
+    }
 }
 
-afterEvaluate {
-    /**
-     * KSP does not currently register kotlin generated sources.
-     * https://github.com/google/ksp/issues/37
-     */
-    fun registerKspSources(variantName: String, addToModel: (java.io.File) -> Unit) {
-        val outputFolder = file("build/generated/ksp/$variantName/kotlin")
-        addToModel(outputFolder)
-        android.sourceSets.getByName(variantName).java.srcDir(outputFolder)
-
-        // eg "debugUnitTest"
-        val testDirectoryName = "${variantName}UnitTest"
-        // eg "testDebug"
-        val testSourceSetName = "test${variantName.replaceFirstChar { it.uppercase() }}"
-
-        val testSourceSet = android.sourceSets.findByName(testSourceSetName) ?: return
-        val testOutputFolder = file("build/generated/ksp/$testDirectoryName/kotlin")
-        testSourceSet.withGroovyBuilder {
-            "kotlin" {
-                invokeMethod("srcDir", testOutputFolder)
-            }
-        }
-
-        // AGP lint tasks read the KSP-generated test sources but Gradle can't infer
-        // the producer/consumer relationship from a srcDir registration alone. Wire
-        // the dependency explicitly to satisfy validation.
-        val variantCapitalized = variantName.replaceFirstChar { it.uppercase() }
-        val kspTestTaskName = "ksp${variantCapitalized}UnitTestKotlin"
+// AGP lint tasks read KSP-generated test sources, but Gradle can't infer
+// the producer/consumer relationship from a srcDir registration alone.
+androidComponents {
+    onVariants { variant ->
+        val variantCap = variant.name.replaceFirstChar { it.uppercase() }
+        val kspTestTask = "ksp${variantCap}UnitTestKotlin"
         listOf(
-            "generate${variantCapitalized}UnitTestLintModel",
-            "lintAnalyze${variantCapitalized}UnitTest",
+            "generate${variantCap}UnitTestLintModel",
+            "lintAnalyze${variantCap}UnitTest",
         ).forEach { consumer ->
-            tasks.matching { it.name == consumer }.configureEach {
-                dependsOn(kspTestTaskName)
-            }
-        }
-    }
-
-    val libraryExtension = extensions.findByType(LibraryExtension::class.java)
-    val appExtension = extensions.findByType(AbstractAppExtension::class.java)
-    when {
-        libraryExtension != null -> {
-            libraryExtension.libraryVariants.all {
-                registerKspSources(name) { addJavaSourceFoldersToModel(it) }
-            }
-        }
-        appExtension != null -> {
-            appExtension.applicationVariants.all {
-                registerKspSources(name) { addJavaSourceFoldersToModel(it) }
-            }
+            tasks.matching { it.name == consumer }.configureEach { dependsOn(kspTestTask) }
         }
     }
 }
@@ -117,6 +78,7 @@ dependencies {
     implementation(libs.compose.tooling)
     implementation(libs.compose.layout)
     implementation(libs.compose.material)
+    implementation(libs.compose.materialIconsCore)
     implementation(libs.compose.savedInstanceState)
     implementation(libs.compose.uiLiveData)
 
@@ -126,5 +88,6 @@ dependencies {
     testImplementation(libs.test.junitImplementation)
     implementation(libs.test.testParameterInjector)
     testImplementation(libs.compose.uiTest)
+    testImplementation(libs.support.lifecycleComposeRuntime)
     testImplementation(project(":showkase-screenshot-testing-paparazzi"))
 }

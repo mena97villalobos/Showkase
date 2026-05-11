@@ -1,6 +1,5 @@
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -10,7 +9,6 @@ android {
     defaultConfig {
         minSdk = 26
         compileSdk = 36
-        targetSdk = 33
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
@@ -36,7 +34,7 @@ configurations.all {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -57,7 +55,6 @@ dependencies {
     implementation(libs.compose.tooling)
 
     implementation(libs.material.material)
-    implementation(libs.material.mdcComposeThemeAdapter)
 
     testImplementation(libs.test.assertJ)
     testImplementation(libs.test.googleTruth)

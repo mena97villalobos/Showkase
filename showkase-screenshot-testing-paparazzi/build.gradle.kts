@@ -1,8 +1,9 @@
 import com.vanniktech.maven.publish.AndroidMultiVariantLibrary
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SourcesJar
 
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
     id("com.vanniktech.maven.publish")
 }
@@ -21,8 +22,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 21
-        targetSdk = 33
+        minSdk = 23
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -45,13 +45,14 @@ android {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
     api(project(":showkase"))
     api(libs.compose.foundation)
     api(libs.compose.activityCompose)
+    implementation(libs.support.lifecycleComposeRuntime)
     compileOnly(libs.test.paparazzi)
 
     api(libs.test.testParameterInjector)
@@ -60,5 +61,5 @@ dependencies {
 }
 
 mavenPublishing {
-    configure(AndroidMultiVariantLibrary(true, true))
+    configure(AndroidMultiVariantLibrary(JavadocJar.Empty(), SourcesJar.Sources()))
 }

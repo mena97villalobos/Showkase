@@ -1,5 +1,6 @@
 import com.vanniktech.maven.publish.JavaLibrary
 import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SourcesJar
 
 plugins {
     `java-library`
@@ -8,9 +9,9 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 mavenPublishing {
-    configure(JavaLibrary(JavadocJar.Javadoc(), true))
+    configure(JavaLibrary(JavadocJar.Javadoc(), SourcesJar.Sources()))
 }

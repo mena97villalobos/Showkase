@@ -1,6 +1,5 @@
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
 }
@@ -15,7 +14,6 @@ android {
     defaultConfig {
         minSdk = 26
         compileSdk = 36
-        targetSdk = 33
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
@@ -41,7 +39,7 @@ configurations.all {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -62,7 +60,6 @@ dependencies {
     androidTestImplementation(libs.compose.uiTest)
 
     implementation(libs.material.material)
-    implementation(libs.material.mdcComposeThemeAdapter)
 
     androidTestImplementation(libs.test.junitImplementation)
     androidTestImplementation(libs.test.androidXTestCore)
