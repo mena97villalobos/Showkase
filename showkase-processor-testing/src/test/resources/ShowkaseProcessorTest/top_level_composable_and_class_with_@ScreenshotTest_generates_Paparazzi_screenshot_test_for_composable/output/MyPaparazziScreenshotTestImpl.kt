@@ -25,14 +25,10 @@ public class MyPaparazziScreenshotTestImpl : MyPaparazziScreenshotTest() {
 
   @Test
   public fun test_previews(
-    @TestParameter(valuesProvider = PaparazziShowkasePreviewProvider::class)
-        elementPreview: PaparazziShowkaseTestPreview,
-    @TestParameter(valuesProvider = PaparazziShowkaseDeviceConfigProvider::class)
-        config: PaparazziShowkaseDeviceConfig,
-    @TestParameter(valuesProvider = PaparazziShowkaseLayoutDirectionProvider::class)
-        direction: LayoutDirection,
-    @TestParameter(valuesProvider = PaparazziShowkaseUIModeProvider::class)
-        uiMode: PaparazziShowkaseUIMode,
+      @TestParameter(valuesProvider = PaparazziShowkasePreviewProvider::class) elementPreview: PaparazziShowkaseTestPreview,
+      @TestParameter(valuesProvider = PaparazziShowkaseDeviceConfigProvider::class) config: PaparazziShowkaseDeviceConfig,
+      @TestParameter(valuesProvider = PaparazziShowkaseLayoutDirectionProvider::class) direction: LayoutDirection,
+      @TestParameter(valuesProvider = PaparazziShowkaseUIModeProvider::class) uiMode: PaparazziShowkaseUIMode,
   ) {
     paparazzi.unsafeUpdateConfig(config.deviceConfig.copy(softButtons = false))
     takePaparazziSnapshot(paparazzi, elementPreview, direction, uiMode, elementPreview.captureType)

@@ -13,19 +13,20 @@ import com.airbnb.android.showkase.ui.ShowkaseBrowserActivity
  */
 public fun Showkase.getBrowserIntent(context: Context): Intent {
     val intent = Intent(context, ShowkaseBrowserActivity::class.java)
-    intent.putExtra("SHOWKASE_ROOT_MODULE",
-        "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input.TestShowkaseRoot")
+    intent.putExtra(
+        "SHOWKASE_ROOT_MODULE",
+        "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input.TestShowkaseRoot"
+    )
     return intent
 }
 
 /**
- * Helper function that's give's you access to Showkase metadata. This contains data about the
- * composables, colors and typography in your codebase that's rendered in showkase.
+ * Helper function that's give's you access to Showkase metadata. This contains data about the composables, colors and typography in your codebase that's rendered in showkase.
  */
 public fun Showkase.getMetadata(): ShowkaseElementsMetadata {
     try {
-      val showkaseComponentProvider =
-          Class.forName("ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input.TestShowkaseRootCodegen")
+        val showkaseComponentProvider =
+            Class.forName("ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input.TestShowkaseRootCodegen")
           	.getDeclaredConstructor()
           	.newInstance() as ShowkaseProvider
       return showkaseComponentProvider.metadata()

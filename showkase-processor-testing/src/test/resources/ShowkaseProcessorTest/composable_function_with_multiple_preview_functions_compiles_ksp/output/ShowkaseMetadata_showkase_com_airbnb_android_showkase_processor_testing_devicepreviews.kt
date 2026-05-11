@@ -3,8 +3,7 @@ package com.airbnb.android.showkase
 
 import com.airbnb.android.showkase.`annotation`.ShowkaseMultiPreviewCodegenMetadata
 
-public class ShowkaseMetadata_showkase_com_airbnb_android_showkase_processor_testing_devicepreviews
-    {
+public class ShowkaseMetadata_showkase_com_airbnb_android_showkase_processor_testing_devicepreviews {
   @ShowkaseMultiPreviewCodegenMetadata(
     previewName = "small screen",
     previewGroup = "device",

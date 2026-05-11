@@ -10,8 +10,7 @@ public val HelloWorldPreviewthemesHelloWorldPreviewdarktheme: ShowkaseBrowserCom
         group = "themes",
         componentName = "HelloWorldPreview - dark theme",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing_HelloWorldPreview_null_themes_HelloWorldPreview-darktheme_0_null""",
+        componentKey = """com.airbnb.android.showkase_processor_testing_HelloWorldPreview_null_themes_HelloWorldPreview-darktheme_0_null""",
         isDefaultStyle = false,
         screenshotConfig = ScreenshotConfig.SingleStaticImage,
         component = @Composable { HelloWorldPreview() }

@@ -3,14 +3,11 @@ package com.airbnb.android.showkase
 
 import com.airbnb.android.showkase.`annotation`.ShowkaseCodegenMetadata
 
-public class
-    ShowkaseMetadata_showkaseprocessortest_composable_functions_with_preview_annotation_are_skipped_input
-    {
+public class ShowkaseMetadata_showkaseprocessortest_composable_functions_with_preview_annotation_are_skipped_input {
   @ShowkaseCodegenMetadata(
     showkaseName = "name1",
     showkaseGroup = "group1",
-    packageName =
-        "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input",
+      packageName = "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input",
     packageSimpleName = "input",
     showkaseElementName = "TestShowkaseComposable1",
     insideObject = false,
@@ -20,15 +17,13 @@ public class
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun ShowkaseProcessorTestcomposablefunctionswithpreviewannotationareskippedinputTestShowkaseComposable1group1name1() {
+  public fun ShowkaseProcessorTestcomposablefunctionswithpreviewannotationareskippedinputTestShowkaseComposable1group1name1() {
   }
 
   @ShowkaseCodegenMetadata(
     showkaseName = "name2",
     showkaseGroup = "group2",
-    packageName =
-        "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input",
+      packageName = "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input",
     packageSimpleName = "input",
     showkaseElementName = "TestShowkaseComposable2",
     insideObject = false,
@@ -38,15 +33,13 @@ public class
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun ShowkaseProcessorTestcomposablefunctionswithpreviewannotationareskippedinputTestShowkaseComposable2group2name2() {
+  public fun ShowkaseProcessorTestcomposablefunctionswithpreviewannotationareskippedinputTestShowkaseComposable2group2name2() {
   }
 
   @ShowkaseCodegenMetadata(
     showkaseName = "name4",
     showkaseGroup = "group4",
-    packageName =
-        "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input",
+      packageName = "ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input",
     packageSimpleName = "input",
     showkaseElementName = "TestShowkaseComposable4",
     insideObject = false,
@@ -56,7 +49,6 @@ public class
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun ShowkaseProcessorTestcomposablefunctionswithpreviewannotationareskippedinputTestShowkaseComposable4group4name4() {
+  public fun ShowkaseProcessorTestcomposablefunctionswithpreviewannotationareskippedinputTestShowkaseComposable4group4name4() {
   }
 }

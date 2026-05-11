@@ -10,8 +10,7 @@ public val TestComposable1WrapperClassTestComposable1: ShowkaseBrowserComponent 
         group = "WrapperClass",
         componentName = "TestComposable1",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing.WrapperClass_TestComposable1_com.airbnb.android.showkase_processor_testing.WrapperClass_WrapperClass_TestComposable1_0_null""",
+        componentKey = """com.airbnb.android.showkase_processor_testing.WrapperClass_TestComposable1_com.airbnb.android.showkase_processor_testing.WrapperClass_WrapperClass_TestComposable1_0_null""",
         isDefaultStyle = false,
         screenshotConfig = ScreenshotConfig.SingleStaticImage,
         component = @Composable {

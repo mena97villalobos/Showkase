@@ -10,10 +10,11 @@ public val TestComposableSingleAnimatedImagegroupsingleanimated: ShowkaseBrowser
         group = "group",
         componentName = "single animated",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing_TestComposableSingleAnimatedImage_null_group_singleanimated_0_null""",
+        componentKey = """com.airbnb.android.showkase_processor_testing_TestComposableSingleAnimatedImage_null_group_singleanimated_0_null""",
         isDefaultStyle = false,
-        screenshotConfig = ScreenshotConfig.SingleAnimatedImage(durationMillis = 1_000, framerate =
-            10),
+        screenshotConfig = ScreenshotConfig.SingleAnimatedImage(
+            durationMillis = 1_000,
+            framerate = 10
+        ),
         component = @Composable { TestComposableSingleAnimatedImage() }
     )

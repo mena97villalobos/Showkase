@@ -16,12 +16,10 @@ public val TestComposableWithDefaultParametersgroupname: List<ShowkaseBrowserCom
                     group = "group",
                     componentName = "name",
                     componentKDoc = "",
-                    componentKey =
-                        """com.airbnb.android.showkase_processor_testing_TestComposableWithDefaultParameters_null_group_name_0_null_$index""",
+                    componentKey = """com.airbnb.android.showkase_processor_testing_TestComposableWithDefaultParameters_null_group_name_0_null_$index""",
                     isDefaultStyle = false,
                     screenshotConfig = ScreenshotConfig.SingleStaticImage,
-                    component = @Composable { TestComposableWithDefaultParameters(bankHeader =
-                        previewParam) }
+                    component = @Composable { TestComposableWithDefaultParameters(bankHeader = previewParam) }
                 )
         }
         .toList()

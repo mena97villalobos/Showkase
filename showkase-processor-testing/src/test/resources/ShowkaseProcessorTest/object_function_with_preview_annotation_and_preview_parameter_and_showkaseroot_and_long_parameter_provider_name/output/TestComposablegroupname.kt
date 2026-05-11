@@ -16,8 +16,7 @@ public val TestComposablegroupname: List<ShowkaseBrowserComponent> =
                     group = "group",
                     componentName = "name",
                     componentKDoc = "",
-                    componentKey =
-                        """com.airbnb.android.showkase_processor_testing_my_very_long_name.WrapperClass_TestComposable_com.airbnb.android.showkase_processor_testing_my_very_long_name.WrapperClass_group_name_0_null_$index""",
+                    componentKey = """com.airbnb.android.showkase_processor_testing_my_very_long_name.WrapperClass_TestComposable_com.airbnb.android.showkase_processor_testing_my_very_long_name.WrapperClass_group_name_0_null_$index""",
                     isDefaultStyle = false,
                     screenshotConfig = ScreenshotConfig.SingleStaticImage,
                     component = @Composable {

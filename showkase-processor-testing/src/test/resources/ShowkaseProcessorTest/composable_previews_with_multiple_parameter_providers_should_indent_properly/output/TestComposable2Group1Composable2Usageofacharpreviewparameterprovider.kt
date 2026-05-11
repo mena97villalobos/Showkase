@@ -17,8 +17,7 @@ public val TestComposable2Group1Composable2Usageofacharpreviewparameterprovider:
                     group = "Group1",
                     componentName = "Composable2 Usage of a char preview parameter provider",
                     componentKDoc = "",
-                    componentKey =
-                        """com.airbnb.android.showkase_browser_testing_TestComposable2_null_Group1_Composable2Usageofacharpreviewparameterprovider_0_null_$index""",
+                    componentKey = """com.airbnb.android.showkase_browser_testing_TestComposable2_null_Group1_Composable2Usageofacharpreviewparameterprovider_0_null_$index""",
                     isDefaultStyle = false,
                     screenshotConfig = ScreenshotConfig.SingleStaticImage,
                     component = @Composable { TestComposable2(c = previewParam) }

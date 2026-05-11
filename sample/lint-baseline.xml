@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues name="AGP (9.2.1)" by="lint 9.2.1" client="gradle" dependencies="false" format="6"
+    type="baseline" variant="all" version="9.2.1">
+
+    <issue errorLine1="    &lt;uses-permission android:name=&quot;android.permission.WRITE_EXTERNAL_STORAGE&quot;/>"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="ScopedStorage"
+        message="WRITE_EXTERNAL_STORAGE is deprecated (and is not granted) when targeting Android 13+. If you need to write to shared storage, use the `MediaStore.createWriteRequest` intent.">
+        <location column="36" file="src/main/AndroidManifest.xml" line="6" />
+    </issue>
+
+    <issue errorLine1="        targetSdk = 35"
+        errorLine2="        ~~~~~~~~~~~~~~"
+        id="OldTargetApi" message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details.">
+        <location column="9" file="build.gradle.kts" line="15" />
+    </issue>
+
+    <issue errorLine1="                    text = label.uppercase(Locale.getDefault()),"
+        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~"
+        id="NonObservableLocale"
+        message="Reading locale in a non-observable way in a composable function">
+        <location column="44" file="src/main/java/com/airbnb/android/showkasesample/Rows.kt"
+            line="150" />
+    </issue>
+
+    <issue errorLine1="            android:label=&quot;@string/app_name&quot;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="RedundantLabel"
+        message="Redundant label can be removed">
+        <location column="13" file="src/main/AndroidManifest.xml" line="22" />
+    </issue>
+
+    <issue errorLine1="    val string = context.getString(R.string.app_name)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current">
+        <location column="18" file="src/main/java/com/airbnb/android/showkasesample/Text.kt"
+            line="38" />
+    </issue>
+
+    <issue errorLine1="    val string = context.getString(R.string.app_name)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current">
+        <location column="18" file="src/main/java/com/airbnb/android/showkasesample/Text.kt"
+            line="60" />
+    </issue>
+
+    <issue errorLine1="    val string = context.getString(R.string.app_name)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current">
+        <location column="18" file="src/main/java/com/airbnb/android/showkasesample/Text.kt"
+            line="82" />
+    </issue>
+
+    <issue errorLine1="    val string = context.getString(R.string.app_name)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current">
+        <location column="18" file="src/main/java/com/airbnb/android/showkasesample/Text.kt"
+            line="103" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Button"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/CustomButton.kt"
+            line="6" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.ButtonDefaults"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/CustomButton.kt"
+            line="7" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/CustomButton.kt"
+            line="8" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/CustomShape.kt"
+            line="7" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Icon"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Navigation.kt"
+            line="3" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.BottomNavigation"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Navigation.kt"
+            line="7" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.BottomNavigationItem"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Navigation.kt"
+            line="8" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Navigation.kt"
+            line="9" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Rows.kt"
+            line="4" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Card"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Rows.kt"
+            line="12" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.ListItem"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Rows.kt"
+            line="14" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.MaterialTheme"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Rows.kt"
+            line="15" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Surface"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Rows.kt"
+            line="16" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Scrollable.kt"
+            line="9" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.MaterialTheme"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/ShowkaseTheme.kt"
+            line="4" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.darkColors"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/ShowkaseTheme.kt"
+            line="5" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.lightColors"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/ShowkaseTheme.kt"
+            line="6" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Text.kt"
+            line="3" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Card"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/showkasesample/Text.kt"
+            line="6" />
+    </issue>
+
+    <issue errorLine1="    var selectedIndex by rememberSaveable { mutableStateOf(0) }"
+        errorLine2="                                            ~~~~~~~~~~~~~~"
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`">
+        <location column="45" file="src/main/java/com/airbnb/android/showkasesample/Navigation.kt"
+            line="24" />
+    </issue>
+
+    <issue errorLine1="&lt;vector android:height=&quot;24dp&quot; android:tint=&quot;#51E2C6&quot;"
+        errorLine2="^"
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_baseline_verified_user_24` appears to be unused">
+        <location column="1" file="src/main/res/drawable/ic_baseline_verified_user_24.xml"
+            line="1" />
+    </issue>
+
+    <issue errorLine1="    &lt;style name=&quot;Theme.App.AppBarOverlay&quot; parent=&quot;ThemeOverlay.AppCompat.Dark.ActionBar&quot; />"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UnusedResources"
+        message="The resource `R.style.Theme_App_AppBarOverlay` appears to be unused">
+        <location column="12" file="src/main/res/values/styles.xml" line="15" />
+    </issue>
+
+    <issue errorLine1="    &lt;style name=&quot;Theme.App.PopupOverlay&quot; parent=&quot;ThemeOverlay.AppCompat.Light&quot; />"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UnusedResources"
+        message="The resource `R.style.Theme_App_PopupOverlay` appears to be unused">
+        <location column="12" file="src/main/res/values/styles.xml" line="17" />
+    </issue>
+
+    <issue errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^"
+        id="MonochromeLauncherIcon"
+        message="The application adaptive icon is missing a monochrome tag">
+        <location column="1" file="src/main/res/mipmap-anydpi-v26/ic_launcher.xml" line="2" />
+    </issue>
+
+    <issue errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^"
+        id="MonochromeLauncherIcon"
+        message="The application adaptive roundIcon is missing a monochrome tag">
+        <location column="1" file="src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" line="2" />
+    </issue>
+
+</issues>

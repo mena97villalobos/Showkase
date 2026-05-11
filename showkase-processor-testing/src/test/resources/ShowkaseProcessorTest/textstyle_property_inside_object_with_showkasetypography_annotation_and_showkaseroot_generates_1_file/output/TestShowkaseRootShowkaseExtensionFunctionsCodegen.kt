@@ -13,19 +13,20 @@ import com.airbnb.android.showkase.ui.ShowkaseBrowserActivity
  */
 public fun Showkase.getBrowserIntent(context: Context): Intent {
     val intent = Intent(context, ShowkaseBrowserActivity::class.java)
-    intent.putExtra("SHOWKASE_ROOT_MODULE",
-        "com.airbnb.android.showkase_processor_testing.TestShowkaseRoot")
+    intent.putExtra(
+        "SHOWKASE_ROOT_MODULE",
+        "com.airbnb.android.showkase_processor_testing.TestShowkaseRoot"
+    )
     return intent
 }
 
 /**
- * Helper function that's give's you access to Showkase metadata. This contains data about the
- * composables, colors and typography in your codebase that's rendered in showkase.
+ * Helper function that's give's you access to Showkase metadata. This contains data about the composables, colors and typography in your codebase that's rendered in showkase.
  */
 public fun Showkase.getMetadata(): ShowkaseElementsMetadata {
     try {
-      val showkaseComponentProvider =
-          Class.forName("com.airbnb.android.showkase_processor_testing.TestShowkaseRootCodegen")
+        val showkaseComponentProvider =
+            Class.forName("com.airbnb.android.showkase_processor_testing.TestShowkaseRootCodegen")
           	.getDeclaredConstructor()
           	.newInstance() as ShowkaseProvider
       return showkaseComponentProvider.metadata()

@@ -16,8 +16,7 @@ public fun Showkase.getBrowserIntent(context: Context): Intent {
 }
 
 /**
- * Helper function that's give's you access to Showkase metadata. This contains data about the
- * composables, colors and typography in your codebase that's rendered in showkase.
+ * Helper function that's give's you access to Showkase metadata. This contains data about the composables, colors and typography in your codebase that's rendered in showkase.
  */
 public fun Showkase.getMetadata(): ShowkaseElementsMetadata {
     try {

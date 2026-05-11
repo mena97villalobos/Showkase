@@ -35,6 +35,9 @@ android {
             excludes += listOf("META-INF/AL2.0", "META-INF/LGPL2.1")
         }
     }
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 kotlin {

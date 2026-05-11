@@ -17,8 +17,7 @@ public val TestComposable1Group1Composable1Usageofanintegerpreviewparameterprovi
                     group = "Group1",
                     componentName = "Composable1 Usage of an integer preview parameter provider",
                     componentKDoc = "",
-                    componentKey =
-                        """com.airbnb.android.showkase_browser_testing_TestComposable1_null_Group1_Composable1Usageofanintegerpreviewparameterprovider_0_null_$index""",
+                    componentKey = """com.airbnb.android.showkase_browser_testing_TestComposable1_null_Group1_Composable1Usageofanintegerpreviewparameterprovider_0_null_$index""",
                     isDefaultStyle = false,
                     screenshotConfig = ScreenshotConfig.SingleStaticImage,
                     component = @Composable { TestComposable1(n = previewParam) }

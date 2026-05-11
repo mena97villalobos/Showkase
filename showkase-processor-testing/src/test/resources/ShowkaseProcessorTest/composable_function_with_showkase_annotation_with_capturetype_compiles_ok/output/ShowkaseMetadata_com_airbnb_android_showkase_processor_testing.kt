@@ -17,8 +17,7 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingTestComposableMultipleImagesAtOffsetsgroupmultipleimages() {
+  public fun comairbnbandroidshowkaseprocessortestingTestComposableMultipleImagesAtOffsetsgroupmultipleimages() {
   }
 
   @ShowkaseCodegenMetadata(
@@ -34,7 +33,6 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingTestComposableSingleAnimatedImagegroupsingleanimated() {
+  public fun comairbnbandroidshowkaseprocessortestingTestComposableSingleAnimatedImagegroupsingleanimated() {
   }
 }

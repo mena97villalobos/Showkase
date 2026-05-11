@@ -20,7 +20,6 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     previewParameterClass = [NewParameterProvider::class],
     previewParameterName = "bankHeader",
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingTestComposableWithDefaultParametersgroupname() {
+  public fun comairbnbandroidshowkaseprocessortestingTestComposableWithDefaultParametersgroupname() {
   }
 }

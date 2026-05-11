@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues name="AGP (9.2.1)" by="lint 9.2.1" client="gradle" dependencies="false" format="6"
+    type="baseline" variant="all" version="9.2.1">
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8"
+            file="src/main/java/com/airbnb/android/submodule2/showkasesample/SamplePreview.kt" line="3" />
+    </issue>
+
+</issues>

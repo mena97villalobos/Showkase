@@ -19,8 +19,7 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingComposablesComponentfontscalesComponentsmallfont() {
+  public fun comairbnbandroidshowkaseprocessortestingComposablesComponentfontscalesComponentsmallfont() {
   }
 
   @ShowkaseCodegenMetadata(
@@ -37,8 +36,7 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingComposablesComponentfontscalesComponentlargefont1() {
+  public fun comairbnbandroidshowkaseprocessortestingComposablesComponentfontscalesComponentlargefont1() {
   }
 
   @ShowkaseCodegenMetadata(
@@ -54,7 +52,6 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingHelloWorldPreviewthemesHelloWorldPreviewdarktheme() {
+  public fun comairbnbandroidshowkaseprocessortestingHelloWorldPreviewthemesHelloWorldPreviewdarktheme() {
   }
 }

@@ -9,8 +9,7 @@ public val TestComposable3group3name3: ShowkaseBrowserComponent = ShowkaseBrowse
         group = "group3",
         componentName = "name3",
         componentKDoc = "",
-        componentKey =
-            """ShowkaseProcessorTest.private_composable_with_preview_annotation_and_skipPrivate_option_compiles_ok.input_TestComposable3_null_group3_name3_0_null""",
+    componentKey = """ShowkaseProcessorTest.private_composable_with_preview_annotation_and_skipPrivate_option_compiles_ok.input_TestComposable3_null_group3_name3_0_null""",
         isDefaultStyle = false,
         screenshotConfig = ScreenshotConfig.SingleStaticImage,
         component = @Composable { TestComposable3() }

@@ -9,8 +9,7 @@ public val TestComposable2group1name2: ShowkaseBrowserComponent = ShowkaseBrowse
         group = "group1",
         componentName = "name2",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing_TestComposable2_null_group1_name2_0_null""",
+    componentKey = """com.airbnb.android.showkase_processor_testing_TestComposable2_null_group1_name2_0_null""",
         isDefaultStyle = false,
         screenshotConfig = ScreenshotConfig.SingleStaticImage,
         component = @Composable { TestComposable2() }

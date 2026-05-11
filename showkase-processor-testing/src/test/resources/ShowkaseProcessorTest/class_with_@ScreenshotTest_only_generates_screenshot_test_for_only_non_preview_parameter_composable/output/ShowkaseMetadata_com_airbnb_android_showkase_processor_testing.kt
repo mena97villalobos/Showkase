@@ -20,8 +20,7 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseMetadataType = "COMPONENT",
     isDefaultStyle = false,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingWrapperClassTestComposable1WrapperClassTestComposable1() {
+  public fun comairbnbandroidshowkaseprocessortestingWrapperClassTestComposable1WrapperClassTestComposable1() {
   }
 
   @ShowkaseCodegenMetadata(

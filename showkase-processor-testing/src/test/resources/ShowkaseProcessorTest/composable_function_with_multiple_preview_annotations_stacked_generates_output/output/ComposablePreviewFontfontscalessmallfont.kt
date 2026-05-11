@@ -10,8 +10,7 @@ public val ComposablePreviewFontfontscalessmallfont: ShowkaseBrowserComponent =
         group = "font scales",
         componentName = "small font",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing_ComposablePreviewFont_null_fontscales_smallfont_0_null""",
+        componentKey = """com.airbnb.android.showkase_processor_testing_ComposablePreviewFont_null_fontscales_smallfont_0_null""",
         isDefaultStyle = false,
         screenshotConfig = ScreenshotConfig.SingleStaticImage,
         component = @Composable { ComposablePreviewFont() }

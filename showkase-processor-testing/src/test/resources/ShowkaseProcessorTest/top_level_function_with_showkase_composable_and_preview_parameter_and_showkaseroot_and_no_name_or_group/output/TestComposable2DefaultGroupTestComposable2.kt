@@ -16,8 +16,7 @@ public val TestComposable2DefaultGroupTestComposable2: List<ShowkaseBrowserCompo
                     group = "Default Group",
                     componentName = "TestComposable2",
                     componentKDoc = "",
-                    componentKey =
-                        """com.airbnb.android.showkase_processor_testing_TestComposable2_null_DefaultGroup_TestComposable2_0_null_$index""",
+                    componentKey = """com.airbnb.android.showkase_processor_testing_TestComposable2_null_DefaultGroup_TestComposable2_0_null_$index""",
                     isDefaultStyle = false,
                     screenshotConfig = ScreenshotConfig.SingleStaticImage,
                     component = @Composable { TestComposable2(text = previewParam) }

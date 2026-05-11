@@ -10,8 +10,7 @@ public val ComponentfontscalesComponentlargefont1: ShowkaseBrowserComponent =
         group = "font scales",
         componentName = "Component - large font",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing.Composables_Component_com.airbnb.android.showkase_processor_testing.Composables_fontscales_Component-largefont_1_null""",
+        componentKey = """com.airbnb.android.showkase_processor_testing.Composables_Component_com.airbnb.android.showkase_processor_testing.Composables_fontscales_Component-largefont_1_null""",
         isDefaultStyle = false,
         screenshotConfig = ScreenshotConfig.SingleStaticImage,
         component = @Composable {

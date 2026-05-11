@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues name="AGP (9.2.1)" by="lint 9.2.1" client="gradle" dependencies="false" format="6"
+    type="baseline" variant="all" version="9.2.1">
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location column="8" file="src/main/java/com/airbnb/android/submodule/showkasesample/Names.kt"
+            line="3" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Card"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location
+            column="8"
+            file="src/main/java/com/airbnb/android/submodule/showkasesample/payments/Payments.kt" line="14" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.MaterialTheme"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location
+            column="8"
+            file="src/main/java/com/airbnb/android/submodule/showkasesample/payments/Payments.kt" line="15" />
+    </issue>
+
+    <issue errorLine1="import androidx.compose.material.Text"
+        errorLine2="       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UsingMaterialAndMaterial3Libraries"
+        message="Using a material import while also using the material3 library">
+        <location
+            column="8"
+            file="src/main/java/com/airbnb/android/submodule/showkasesample/payments/Payments.kt" line="16" />
+    </issue>
+
+    <issue errorLine1="    val pink = Color(android.graphics.Color.parseColor(&quot;#FFD7D7&quot;))" errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?">
+        <location column="22"
+            file="src/main/java/com/airbnb/android/submodule/showkasesample/SubmoduleColor.kt" line="8" />
+    </issue>
+
+</issues>

@@ -19,8 +19,7 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseWidthDp = 250,
     showkaseHeightDp = 250,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingStackedShowkaseComposablesfontscalessmallfont() {
+  public fun comairbnbandroidshowkaseprocessortestingStackedShowkaseComposablesfontscalessmallfont() {
   }
 
   @ShowkaseCodegenMetadata(
@@ -38,7 +37,6 @@ public class ShowkaseMetadata_com_airbnb_android_showkase_processor_testing {
     showkaseWidthDp = 200,
     showkaseHeightDp = 200,
   )
-  public
-      fun comairbnbandroidshowkaseprocessortestingStackedShowkaseComposablesfontscaleslargefont1() {
+  public fun comairbnbandroidshowkaseprocessortestingStackedShowkaseComposablesfontscaleslargefont1() {
   }
 }

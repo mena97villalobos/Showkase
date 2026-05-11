@@ -9,8 +9,7 @@ public val TestShowkaseComposable2group2name2: ShowkaseBrowserComponent = Showka
         group = "group2",
         componentName = "name2",
         componentKDoc = "",
-        componentKey =
-            """ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input_TestShowkaseComposable2_null_group2_name2_0_null""",
+    componentKey = """ShowkaseProcessorTest.composable_functions_with_preview_annotation_are_skipped.input_TestShowkaseComposable2_null_group2_name2_0_null""",
         isDefaultStyle = false,
         screenshotConfig = ScreenshotConfig.SingleStaticImage,
         component = @Composable { TestShowkaseComposable2() }

@@ -3,8 +3,7 @@ package com.airbnb.android.showkase
 
 import com.airbnb.android.showkase.`annotation`.ShowkaseMultiPreviewCodegenMetadata
 
-public class
-    ShowkaseMetadata_showkase_com_airbnb_android_showkase_processor_testing_fontscalepreviews {
+public class ShowkaseMetadata_showkase_com_airbnb_android_showkase_processor_testing_fontscalepreviews {
   @ShowkaseMultiPreviewCodegenMetadata(
     previewName = "small font",
     previewGroup = "font scales",

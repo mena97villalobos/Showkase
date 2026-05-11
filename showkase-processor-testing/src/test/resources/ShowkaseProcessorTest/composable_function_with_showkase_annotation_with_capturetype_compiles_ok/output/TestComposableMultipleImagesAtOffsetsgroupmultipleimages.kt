@@ -10,10 +10,17 @@ public val TestComposableMultipleImagesAtOffsetsgroupmultipleimages: ShowkaseBro
         group = "group",
         componentName = "multiple images",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing_TestComposableMultipleImagesAtOffsets_null_group_multipleimages_0_null""",
+        componentKey = """com.airbnb.android.showkase_processor_testing_TestComposableMultipleImagesAtOffsets_null_group_multipleimages_0_null""",
         isDefaultStyle = false,
-        screenshotConfig = ScreenshotConfig.MultipleImagesAtOffsets(offsetMillis = listOf(0, 200,
-            400, 600, 800, 1000)),
+        screenshotConfig = ScreenshotConfig.MultipleImagesAtOffsets(
+            offsetMillis = listOf(
+                0,
+                200,
+                400,
+                600,
+                800,
+                1000
+            )
+        ),
         component = @Composable { TestComposableMultipleImagesAtOffsets() }
     )

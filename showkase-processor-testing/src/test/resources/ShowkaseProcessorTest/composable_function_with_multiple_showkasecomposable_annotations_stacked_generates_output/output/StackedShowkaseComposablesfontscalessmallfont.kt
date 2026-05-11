@@ -10,8 +10,7 @@ public val StackedShowkaseComposablesfontscalessmallfont: ShowkaseBrowserCompone
         group = "font scales",
         componentName = "small font",
         componentKDoc = "",
-        componentKey =
-            """com.airbnb.android.showkase_processor_testing_StackedShowkaseComposables_null_fontscales_smallfont_0_null""",
+        componentKey = """com.airbnb.android.showkase_processor_testing_StackedShowkaseComposables_null_fontscales_smallfont_0_null""",
         isDefaultStyle = false,
         widthDp = 250,
         heightDp = 250,

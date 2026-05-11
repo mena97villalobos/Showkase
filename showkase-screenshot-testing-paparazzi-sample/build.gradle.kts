@@ -1,3 +1,5 @@
+import com.android.build.api.variant.HasHostTests
+
 plugins {
     id("com.android.library")
     alias(libs.plugins.paparazzi)
@@ -28,6 +30,9 @@ android {
             )
         }
     }
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 // https://github.com/cashapp/paparazzi/issues/409
@@ -41,17 +46,27 @@ tasks.withType<Test>().configureEach {
 
 kotlin {
     jvmToolchain(21)
-    // KSP-generated kotlin sources aren't auto-registered for kotlinc.
-    // See https://github.com/google/ksp/issues/37.
-    sourceSets.configureEach {
-        kotlin.srcDir(layout.buildDirectory.dir("generated/ksp/$name/kotlin"))
-    }
 }
 
-// AGP lint tasks read KSP-generated test sources, but Gradle can't infer
-// the producer/consumer relationship from a srcDir registration alone.
+// KSP-generated kotlin output isn't auto-registered with AGP's source model
+// (https://github.com/google/ksp/issues/37). Wire each variant's main and
+// host-test (unit-test) sources via the modern androidComponents API. The
+// older variant.unitTest accessor was generalized to HasHostTests in AGP 9.
 androidComponents {
     onVariants { variant ->
+        variant.sources.java?.addStaticSourceDirectory(
+            layout.buildDirectory.dir("generated/ksp/${variant.name}/kotlin")
+                .get().asFile.absolutePath
+        )
+        (variant as? HasHostTests)?.hostTests?.values?.forEach { hostTest ->
+            hostTest.sources.java?.addStaticSourceDirectory(
+                layout.buildDirectory.dir("generated/ksp/${hostTest.name}/kotlin")
+                    .get().asFile.absolutePath
+            )
+        }
+
+        // AGP lint tasks read KSP-generated test sources, but Gradle can't infer
+        // the producer/consumer relationship from a srcDir registration alone.
         val variantCap = variant.name.replaceFirstChar { it.uppercase() }
         val kspTestTask = "ksp${variantCap}UnitTestKotlin"
         listOf(
