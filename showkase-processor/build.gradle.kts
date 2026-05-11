@@ -24,6 +24,7 @@ dependencies {
 
     implementation(libs.kotlinPoet)
     implementation(libs.kotlinJavaPoetInterop)
+    implementation(libs.kotlinPoetKsp)
     implementation(libs.ksp)
     implementation(libs.xprocessing)
 

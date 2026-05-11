@@ -1,0 +1,71 @@
+# Step 8 — XProcessing → KSP-native migration: status
+
+**Status: deferred to a dedicated session.** This file documents the full migration scope so a future session can execute it cleanly.
+
+## Why I stopped
+
+The XProcessing migration is genuinely the 1-2 week task the architecture review identified. Doing it autonomously in this session would have:
+
+- Touched ~3300 LOC across 15 processor source files
+- Required regenerating every `*.kt` golden file in `showkase-processor-testing/src/test/resources/ShowkaseProcessorTest/` (50+ test cases)
+- Forced a paparazzi screenshot re-baseline if any generated-code shape shifted
+- Almost certainly produced "compiles but golden tests diverge in unpredictable ways" — a diff that's effectively un-reviewable
+
+The architecture review explicitly recommended deferring this: *"This is the highest-effort item in the sweep by a wide margin. If during execution this proves too disruptive, deferring is reasonable."* So that's what this file does: stops cleanly, documents the work precisely, and keeps the rest of the session's 7-step landing intact.
+
+## What changed and what didn't
+
+| Build artifact | State |
+|---|---|
+| `libs.kotlinPoetKsp` (new catalog entry) | Added (ready for the migration; harmless if unused) |
+| `libs.xprocessing` / `libs.xprocessingTesting` deps | **Still present** in `showkase-processor/build.gradle.kts` |
+| All processor source files | Unchanged — still use `androidx.room.compiler.processing.*` |
+| Golden test outputs | Unchanged — still byte-identical to pre-migration |
+| Test suites | All passing on KSP path |
+
+## Migration scope by file
+
+LOC and reference counts measured during the planning pass.
+
+| File | LOC | XProcessing refs | Migration complexity | Notes |
+|---|---|---|---|---|
+| `processor/Timer.kt` | 50 | 2 | **S** | One `XMessager` param. Trivial swap to `KSPLogger`. |
+| `processor/exceptions/ShowkaseProcessorException.kt` | 5 | 2 | **S** | `XElement?` field → `KSNode?` (or `KSAnnotated?`). One file, one type. |
+| `processor/logging/ShowkaseExceptionLogger.kt` | 33 | 2 | **S** | `XMessager` → `KSPLogger`. Swap `messager.printMessage(Kind.ERROR, msg, element)` to `logger.error(msg, ksNode)`. |
+| `processor/BaseProcessor.kt` | 86 | 14 | **M** | Strip `XProcessingEnv.create(...)` wrapping. Replace `environment: XProcessingEnv` field with KSP-native primitives: `resolver: Resolver`, `codeGenerator: CodeGenerator`, `logger: KSPLogger`, `options: Map<String, String>`. Abstract `process(env, round)` → `process(resolver)`. |
+| `processor/utils/XProcessingExtensions.kt` | 34 | 8 | **S** | Rewrite as KSP-native: `KSAnnotated.findAnnotationBySimpleName(name)` + `KSAnnotated.requireAnnotationBySimpleName(name)` returning `KSAnnotation?` / `List<KSAnnotation>`. `ensureConsistentOrdering` already operates on `XElement` ordering — replace with `KSDeclaration` ordering. |
+| `processor/writer/WriterUtils.kt` | 379 | 6 | **M** | `writeFile(...)` switches `XFiler.Mode.Aggregating` → `Dependencies(aggregating = true, *originatingFiles)`. `addOriginatingElement(xElement)` → `addOriginatingKSFile(ksFile)` (provided by `kotlinpoet-ksp`). `FileSpec.writeTo(environment.filer, mode)` → `FileSpec.writeTo(codeGenerator, dependencies)`. |
+| `processor/writer/ShowkaseBrowserWriter.kt` | 223 | 9 | **M** | Same `XFiler`/`XProcessingEnv` → KSP swap. `XElement.qualifiedName` → `(ksAnnotated as KSDeclaration).qualifiedName?.asString()`. `XElement.packageName` → `(ksDecl).packageName.asString()`. `XAnnotation.getAsString("name")` → `ksAnnotation.argByName<String>("name")` helper. |
+| `processor/writer/ShowkaseBrowserPropertyWriter.kt` | 253 | 6 | **M** | Mostly the writer plumbing; `XFiler.Mode.Isolating` → `Dependencies(aggregating = false, ksFile)`. |
+| `processor/writer/ShowkaseCodegenMetadataWriter.kt` | 132 | 6 | **M** | Writer plumbing swap. Trivial logic. |
+| `processor/writer/ShowkaseExtensionFunctionsWriter.kt` | 135 | 10 | **M** | `XTypeElement` → `KSClassDeclaration`. Writer plumbing swap. |
+| `processor/writer/ShowkaseScreenshotTestWriter.kt` | 119 | 5 | **M** | Writer plumbing swap. |
+| `processor/writer/PaparazziShowkaseScreenshotTestWriter.kt` | 270 | 5 | **M** | Writer plumbing swap. |
+| `processor/models/ShowkaseMetadata.kt` | 513 | 38 | **L** | The hot zone. Every helper takes `XElement`/`XTypeElement`/`XMethodElement`/`XFieldElement`/`XMemberContainer`/`XAnnotation`. Need to rewrite: `getCodegenMetadataTypes`, `extractCommonMetadata`, `getShowkaseFunctionType`, `getEnclosingClass`, `getShowkaseMetadata` (all overloads), `getShowkaseMetadataFromPreview`, `getShowkaseMetadataFromCustomAnnotation`, `getShowkaseColorMetadata`, `getShowkaseTypographyMetadata`, `XMethodElement.getPreviewParameterMetadata`, `XMethodElement.getPreviewParameterAnnotation`. **Most callers of `XAnnotation.getAsString/getAsInt/getAsBoolean/getAsStringList/getAsAnnotation/getAsType/getAsTypeList/getAsEnum/getAsIntList`** live here. Build a `KSAnnotation` helper companion and apply it pervasively. |
+| `processor/logging/ShowkaseValidator.kt` | 383 | 34 | **L** | Validation logic. `XProcessingEnv.requireType("...")` → `Resolver.getClassDeclarationByName(resolver.getKSNameFromString("..."))`. `XType.isSameType(other)` → `KSType.isAssignableFrom(other)` or equality on `declaration.qualifiedName`. `XType.isAssignableFrom(other)` → `KSType.isAssignableFrom(other)`. The contract-based `XElement is XMethodElement` / `XFieldElement` / `XTypeElement` smart-casts need to become `is KSFunctionDeclaration` / `is KSPropertyDeclaration` / `is KSClassDeclaration`. |
+| `processor/ShowkaseProcessor.kt` | 646 | 32 | **L** | Main orchestrator. `XRoundEnv.getElementsAnnotatedWith(KClass)` → `resolver.getSymbolsWithAnnotation(KClass.qualifiedName!!).toList()`. `XProcessingEnv.getTypeElementsFromPackage(pkg)` → `resolver.getDeclarationsFromPackage(pkg)` (KSP-native, returns `Sequence<KSDeclaration>`). The classpath-scanning code path for `@ShowkaseMultiPreviewCodegenMetadata` discovery (lines ~210-269) is the riskiest section — it iterates over all package members and reads BINARY-retention annotations from classpath. Verify KSP exposes this correctly for the cross-module discovery flow. |
+| `processor/src/test/kotlin/.../ShowkaseMetadataTest.kt` | 80 | 4 | **M** | `runKspTest(sources) { invocation -> … }` is from `androidx.room.compiler.processing.util.runKspTest`. Need to rewrite using `kotlin-compile-testing-ksp` directly (`KotlinCompilation().configureKsp(useKsp2 = true)`). `invocation.processingEnv.requireTypeElement("Bar")` → `resolver.getClassDeclarationByName(...)`. Tests assert behavior of `isTopLevel`, which the migration changes. |
+
+**Total**: ~3260 LOC, 183 XProcessing references across 16 source files.
+
+## Suggested execution order (when picked up later)
+
+1. **Add `kotlinpoet-ksp` to processor build** (already done — `libs.kotlinPoetKsp` is in the catalog and `implementation(libs.kotlinPoetKsp)` is in `showkase-processor/build.gradle.kts`).
+2. **Build a helpers file** `processor/utils/KsAnnotationExtensions.kt` providing typed `KSAnnotation.argByName<T>(name)` plus convenience aliases (`getAsString`, `getAsInt`, etc.) that match XProcessing's surface. Doing this first lets the rest of the migration be mostly mechanical search-and-replace.
+3. **Tackle the writers** (Step S/M). They're insulated from the heavy logic — just plumbing changes. Make sure golden tests still pass byte-for-byte before continuing.
+4. **Migrate `BaseProcessor` + entry-point boilerplate**.
+5. **Migrate `Validator`** (medium complexity, contained).
+6. **Migrate `ShowkaseMetadata`** (the hot zone — biggest single rewrite).
+7. **Migrate `ShowkaseProcessor`** (entry — the rest builds up to this).
+8. **Rewrite the test** in `showkase-processor/src/test/kotlin/.../ShowkaseMetadataTest.kt` to use `kotlin-compile-testing-ksp` directly.
+9. **Drop the deps**: remove `implementation(libs.xprocessing)` and `testImplementation(libs.xprocessingTesting)` from `showkase-processor/build.gradle.kts`; remove the `xprocessing` / `xprocessingTesting` library entries and `xprocessing` version from `gradle/libs.versions.toml`.
+10. **Verification gates**: `./gradlew :showkase-processor:test`, `./gradlew :showkase-processor-testing:test` (byte-diff every golden file against pre-migration), `./gradlew :showkase-screenshot-testing-paparazzi-sample:verifyPaparazziDebug`.
+
+## Failing tests on master right now
+
+None caused by this session's work. The only persistent failure is the pre-existing **`./gradlew check` (KSP path) lint↔KSP task-dependency** issue documented in earlier sessions for `showkase-screenshot-testing-paparazzi-sample` — not blocking CI, not related to XProcessing.
+
+## What I kept that's useful for the future session
+
+- `libs.kotlinPoetKsp` in the catalog → `com.squareup:kotlinpoet-ksp:1.12.0`. This is the integration that gives you `FileSpec.writeTo(codeGenerator, Dependencies)` and `TypeSpec.Builder.addOriginatingKSFile(ksFile)`. Already wired into `showkase-processor/build.gradle.kts` as `implementation(libs.kotlinPoetKsp)`.
+- All other session deliverables (Steps 1–7, 9) intact and verified green.
