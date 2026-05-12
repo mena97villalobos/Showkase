@@ -41,8 +41,6 @@ kotlin {
 }
 
 dependencies {
-    testImplementation(files("libs/rt.jar"))
-
     implementation(libs.support.appCompat)
 
     implementation(project(":showkase"))
