@@ -14,6 +14,7 @@ on:
           - major
   push:
     branches: [ master, main ]
+    tags: [ 'v*.*.*' ]
 
 permissions:
   contents: write
@@ -47,25 +48,32 @@ jobs:
         id: version
         run: |
           set -euo pipefail
-          BUMP="${{ github.event.inputs.version-bump || 'patch' }}"
-          LATEST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)
-          if [ -z "$LATEST_TAG" ]; then
-            PREVIOUS_TAG=""
-            MAJOR=0; MINOR=0; PATCH=0
-            echo "No existing v*.*.* tag found, starting from v0.0.0"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            NEW_TAG="${GITHUB_REF_NAME}"
+            NEW_VERSION="${NEW_TAG#v}"
+            PREVIOUS_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -vx "${NEW_TAG}" | head -n1 || true)
+            echo "Triggered by tag push: $NEW_TAG"
           else
-            PREVIOUS_TAG="$LATEST_TAG"
-            VERSION="${LATEST_TAG#v}"
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            BUMP="${{ github.event.inputs.version-bump || 'patch' }}"
+            LATEST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)
+            if [ -z "$LATEST_TAG" ]; then
+              PREVIOUS_TAG=""
+              MAJOR=0; MINOR=0; PATCH=0
+              echo "No existing v*.*.* tag found, starting from v0.0.0"
+            else
+              PREVIOUS_TAG="$LATEST_TAG"
+              VERSION="${LATEST_TAG#v}"
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            fi
+            case "$BUMP" in
+              major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH+1)) ;;
+              *) echo "Unknown bump type: $BUMP"; exit 1 ;;
+            esac
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            NEW_TAG="v${NEW_VERSION}"
           fi
-          case "$BUMP" in
-            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH+1)) ;;
-            *) echo "Unknown bump type: $BUMP"; exit 1 ;;
-          esac
-          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          NEW_TAG="v${NEW_VERSION}"
           echo "Previous tag: ${PREVIOUS_TAG:-<none>}"
           echo "New version:  $NEW_VERSION"
           echo "previous-tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
@@ -115,6 +123,7 @@ jobs:
           cat "$NOTES_FILE"
 
       - name: Create and push tag
+        if: github.ref_type != 'tag'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
