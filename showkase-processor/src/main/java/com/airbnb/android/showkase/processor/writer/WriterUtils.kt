@@ -142,6 +142,15 @@ internal fun CodeBlock.Builder.addShowkaseBrowserComponent(
     addStringList("tags", showkaseMetadata.tags)
     addStringList("extraMetadata", showkaseMetadata.extraMetadata)
     add("\nscreenshotConfig = %L,", screenshotConfigCodeBlock(showkaseMetadata.screenshotConfig))
+    if (showkaseMetadata.isDialog) {
+        add("\nisDialog = true,")
+        if (showkaseMetadata.dialogButtonText.isNotEmpty()) {
+            add("\ndialogButtonText = %S,", showkaseMetadata.dialogButtonText)
+        }
+        if (showkaseMetadata.dialogHideButtonText.isNotEmpty()) {
+            add("\ndialogHideButtonText = %S,", showkaseMetadata.dialogHideButtonText)
+        }
+    }
     add(
         composePreviewFunctionLambdaCodeBlock(
             showkaseMetadata.packageName,

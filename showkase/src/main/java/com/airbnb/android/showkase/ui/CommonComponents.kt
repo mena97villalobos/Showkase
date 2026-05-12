@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,11 +14,17 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.airbnb.android.showkase.R
 import com.airbnb.android.showkase.models.ShowkaseBrowserComponent
 
 private val LightColors = lightColorScheme()
@@ -82,7 +89,7 @@ internal fun ComponentCard(
             ) {
                 Box {
                     Column(modifier = composableModifier) {
-                        metadata.component()
+                        DialogAwareComponent(metadata)
                     }
                     // Need to add this as part of the stack so that we can intercept the touch of the
                     // component when we are on the "Group components" screen. If
@@ -105,3 +112,21 @@ private fun Modifier.generateContainerModifier(onClick: (() -> Unit)?) =
         fillMaxWidth()
             .clickable(onClick = onClick)
     } ?: fillMaxWidth()
+
+@Composable
+internal fun DialogAwareComponent(metadata: ShowkaseBrowserComponent) {
+    if (!metadata.isDialog) {
+        metadata.component()
+        return
+    }
+    var show by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val showLabel = metadata.dialogButtonText
+        .ifEmpty { context.getString(R.string.showkase_browser_show_dialog) }
+    val hideLabel = metadata.dialogHideButtonText
+        .ifEmpty { context.getString(R.string.showkase_browser_hide_dialog) }
+    Button(onClick = { show = !show }) {
+        Text(text = if (show) hideLabel else showLabel)
+    }
+    if (show) metadata.component()
+}

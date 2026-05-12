@@ -3,6 +3,7 @@ package com.airbnb.android.showkase.processor
 import com.airbnb.android.showkase.annotation.ShowkaseCodegenMetadata
 import com.airbnb.android.showkase.annotation.ShowkaseColor
 import com.airbnb.android.showkase.annotation.ShowkaseComposable
+import com.airbnb.android.showkase.annotation.ShowkaseDialog
 import com.airbnb.android.showkase.annotation.ShowkaseMultiPreviewCodegenMetadata
 import com.airbnb.android.showkase.annotation.ShowkaseRoot
 import com.airbnb.android.showkase.annotation.ShowkaseRootCodegen
@@ -15,6 +16,7 @@ import com.airbnb.android.showkase.processor.models.ShowkaseMetadata
 import com.airbnb.android.showkase.processor.models.ShowkaseMetadataType
 import com.airbnb.android.showkase.processor.models.getCodegenMetadataTypes
 import com.airbnb.android.showkase.processor.models.getShowkaseColorMetadata
+import com.airbnb.android.showkase.processor.models.getShowkaseDialogMetadata
 import com.airbnb.android.showkase.processor.models.getShowkaseMetadata
 import com.airbnb.android.showkase.processor.models.getShowkaseMetadataFromCustomAnnotation
 import com.airbnb.android.showkase.processor.models.getShowkaseMetadataFromPreview
@@ -82,7 +84,9 @@ class ShowkaseProcessor(
         val previewComposablesMetadata = processPreviewAnnotation(resolver)
 
         val customPreviewFromClassPathMetadata = processCustomAnnotationFromClasspath(resolver)
-        return (showkaseComposablesMetadata + previewComposablesMetadata + customPreviewFromClassPathMetadata)
+        val showkaseDialogsMetadata = processShowkaseDialogAnnotation(resolver)
+        return (showkaseComposablesMetadata + previewComposablesMetadata +
+                customPreviewFromClassPathMetadata + showkaseDialogsMetadata)
             .dedupeAndSort()
             .toSet()
     }
@@ -103,6 +107,28 @@ class ShowkaseProcessor(
                 )
                 if (skipElement) return@mapNotNull null
                 getShowkaseMetadata(
+                    element = element as KSFunctionDeclaration,
+                    showkaseValidator = showkaseValidator,
+                )
+            }.flatten().mapNotNull { it }.toSet()
+    }
+
+    private fun processShowkaseDialogAnnotation(
+        resolver: Resolver
+    ): Set<ShowkaseMetadata.Component> {
+        val skipPrivatePreviews = options["skipPrivatePreviews"].toBoolean()
+        return resolver.getSymbolsWithAnnotation(ShowkaseDialog::class.qualifiedName!!)
+            .toList()
+            .ensureConsistentOrdering()
+            .mapNotNull { element ->
+                if (showkaseValidator.checkElementIsAnnotationClass(element)) return@mapNotNull null
+                val skipElement = showkaseValidator.validateComponentElementOrSkip(
+                    element,
+                    ShowkaseDialog::class.java.simpleName,
+                    skipPrivatePreviews
+                )
+                if (skipElement) return@mapNotNull null
+                getShowkaseDialogMetadata(
                     element = element as KSFunctionDeclaration,
                     showkaseValidator = showkaseValidator,
                 )
@@ -546,7 +572,10 @@ class ShowkaseProcessor(
             name = getAsString("showkaseName"),
             isDefaultStyle = getAsBoolean("isDefaultStyle"),
             tags = getAsStringList("tags"),
-            extraMetadata = getAsStringList("extraMetadata")
+            extraMetadata = getAsStringList("extraMetadata"),
+            isDialog = getAsBoolean("isDialog"),
+            dialogButtonText = getAsString("dialogButtonText"),
+            dialogHideButtonText = getAsString("dialogHideButtonText"),
         )
     }
 
@@ -663,7 +692,10 @@ internal data class ShowkaseGeneratedMetadata(
     // This property is only used for components
     val isDefaultStyle: Boolean = false,
     val tags: List<String> = emptyList(),
-    val extraMetadata: List<String> = emptyList()
+    val extraMetadata: List<String> = emptyList(),
+    val isDialog: Boolean = false,
+    val dialogButtonText: String = "",
+    val dialogHideButtonText: String = "",
 )
 
 internal enum class ShowkaseGeneratedMetadataType {

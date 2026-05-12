@@ -16,4 +16,7 @@ data class ShowkaseBrowserComponent(
     val tags: List<String> = emptyList(),
     val extraMetadata: List<String> = emptyList(),
     val screenshotConfig: ScreenshotConfig = ScreenshotConfig.SingleStaticImage,
+    val isDialog: Boolean = false,
+    val dialogButtonText: String = "",
+    val dialogHideButtonText: String = "",
     )

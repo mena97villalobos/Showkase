@@ -111,6 +111,18 @@ internal class ShowkaseCodegenMetadataWriter(private val codeGenerator: CodeGene
                 }
                 addStringArrayMember(ShowkaseCodegenMetadata::tags.name, showkaseMetadata.tags)
                 addStringArrayMember(ShowkaseCodegenMetadata::extraMetadata.name, showkaseMetadata.extraMetadata)
+                if (showkaseMetadata.isDialog) {
+                    addMember("isDialog = %L", true)
+                    if (showkaseMetadata.dialogButtonText.isNotEmpty()) {
+                        addMember("dialogButtonText = %S", showkaseMetadata.dialogButtonText)
+                    }
+                    if (showkaseMetadata.dialogHideButtonText.isNotEmpty()) {
+                        addMember(
+                            "dialogHideButtonText = %S",
+                            showkaseMetadata.dialogHideButtonText
+                        )
+                    }
+                }
             }
         }
 

@@ -194,7 +194,7 @@ private fun RTLComponentCard(metadata: ShowkaseBrowserComponent) {
         Card(modifier = Modifier.fillMaxWidth()) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 Column(modifier = updatedModifier) {
-                    metadata.component()
+                    DialogAwareComponent(metadata)
                 }
             }
         }

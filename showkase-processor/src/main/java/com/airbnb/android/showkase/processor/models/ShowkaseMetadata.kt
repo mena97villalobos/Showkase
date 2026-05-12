@@ -5,6 +5,7 @@ import com.airbnb.android.showkase.annotation.ScreenshotCaptureType
 import com.airbnb.android.showkase.annotation.ScreenshotConfig
 import com.airbnb.android.showkase.annotation.ShowkaseColor
 import com.airbnb.android.showkase.annotation.ShowkaseComposable
+import com.airbnb.android.showkase.annotation.ShowkaseDialog
 import com.airbnb.android.showkase.annotation.ShowkaseMultiPreviewCodegenMetadata
 import com.airbnb.android.showkase.annotation.ShowkaseTypography
 import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.PREVIEW_PARAMETER_SIMPLE_NAME
@@ -78,6 +79,9 @@ internal sealed class ShowkaseMetadata {
         val tags: List<String> = emptyList(),
         val extraMetadata: List<String> = emptyList(),
         val screenshotConfig: ScreenshotConfig = ScreenshotConfig.SingleStaticImage,
+        val isDialog: Boolean = false,
+        val dialogButtonText: String = "",
+        val dialogHideButtonText: String = "",
     ) : ShowkaseMetadata()
 
     data class Color(
@@ -180,6 +184,58 @@ internal fun getShowkaseMetadata(
             tags = tags,
             extraMetadata = extraMetadata,
             screenshotConfig = screenshotConfig,
+        )
+    }
+}
+
+internal fun getShowkaseDialogMetadata(
+    element: KSFunctionDeclaration,
+    showkaseValidator: ShowkaseValidator
+): List<ShowkaseMetadata.Component?> {
+    val showkaseDialogAnnotations = element.getAnnotations(ShowkaseDialog::class)
+    val elementName = element.simpleName.asString()
+
+    val commonMetadata = element.extractCommonMetadata(showkaseValidator)
+    val previewParameterMetadata = element.getPreviewParameterMetadata()
+
+    return showkaseDialogAnnotations.mapNotNull { annotation ->
+        if (annotation.getAsBoolean("skip")) return@mapNotNull null
+
+        val showkaseName = getShowkaseName(annotation.getAsString("name"), elementName)
+        val showkaseGroup = getShowkaseGroup(
+            annotation.getAsString("group"),
+            commonMetadata.enclosingClass,
+        )
+        val isDefaultStyle = annotation.getAsBoolean("defaultStyle")
+        val showkaseStyleName =
+            getShowkaseStyleName(annotation.getAsString("styleName"), isDefaultStyle)
+        val tags = annotation.getAsStringList("tags")
+        val extraMetadata = annotation.getAsStringList("extraMetadata")
+        val screenshotConfig = screenshotConfigFrom(annotation)
+        ShowkaseMetadata.Component(
+            packageSimpleName = commonMetadata.moduleName,
+            packageName = commonMetadata.packageName,
+            enclosingClassName = commonMetadata.enclosingClassName,
+            elementName = elementName,
+            showkaseName = showkaseName,
+            showkaseGroup = showkaseGroup,
+            showkaseStyleName = showkaseStyleName,
+            showkaseWidthDp = annotation.getAsInt("widthDp").parseAnnotationProperty(),
+            showkaseHeightDp = annotation.getAsInt("heightDp").parseAnnotationProperty(),
+            insideObject = commonMetadata.showkaseFunctionType.insideObject(),
+            insideWrapperClass = commonMetadata.showkaseFunctionType == ShowkaseFunctionType.INSIDE_CLASS,
+            element = element,
+            showkaseKDoc = commonMetadata.kDoc,
+            previewParameterName = previewParameterMetadata?.first,
+            previewParameterProviderType = previewParameterMetadata?.second,
+            isDefaultStyle = isDefaultStyle,
+            componentIndex = showkaseDialogAnnotations.indexOf(annotation),
+            tags = tags,
+            extraMetadata = extraMetadata,
+            screenshotConfig = screenshotConfig,
+            isDialog = true,
+            dialogButtonText = annotation.getAsString("buttonText"),
+            dialogHideButtonText = annotation.getAsString("hideButtonText"),
         )
     }
 }
