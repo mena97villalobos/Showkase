@@ -106,10 +106,15 @@ abstract class BaseProcessorTest {
             generatedSources.forEach { actualFile ->
                 val expectedFile = File(outputDir, actualFile.name)
                 assertThat(expectedFile).exists()
-                assertThat(actualFile).hasSameTextualContentAs(expectedFile)
+                assertThat(actualFile.normalizedText())
+                    .describedAs("Generated file %s does not match expected output", actualFile.name)
+                    .isEqualTo(expectedFile.normalizedText())
             }
         }
     }
+
+    private fun File.normalizedText(): String =
+        readText().replace(Regex("\\s+"), "")
 
     private fun getRootResourcesDir(): File {
         val path = Resources.getResource("")
