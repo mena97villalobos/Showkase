@@ -86,6 +86,7 @@ internal class ShowkaseCodegenMetadataWriter(private val codeGenerator: CodeGene
             .addMember("showkaseKDoc = %S", showkaseMetadata.showkaseKDoc)
             .addMember("generatedPropertyName = %S", generatePropertyNameFromMetadata(showkaseMetadata))
 
+    @Suppress("NestedBlockDepth")
     private fun addMetadataTypeSpecificProperties(
         showkaseMetadata: ShowkaseMetadata,
         annotation: AnnotationSpec.Builder
