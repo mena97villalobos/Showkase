@@ -56,11 +56,14 @@ interface RoborazziShowkaseScreenshotTest {
         fun sdk(): Int = 33
 
         /**
-         * Roborazzi options for comparison. Default is pixel-perfect (`changeThreshold = 0f`).
-         * Override to loosen the threshold for noisy renderings.
+         * Roborazzi options for comparison. Defaults to `changeThreshold = 0.01f` (1%) to absorb
+         * sub-pixel font anti-aliasing noise when goldens are recorded on one OS (e.g. macOS) and
+         * verified on another (e.g. Linux CI) — Roborazzi's `GraphicsMode.NATIVE` defers to the
+         * host Skia, so AA differs across platforms even when output is visually identical.
+         * Override to tighten for pixel-perfect comparison or loosen further for noisier renderings.
          */
         fun roborazziOptions(): RoborazziOptions = RoborazziOptions(
-            compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0f),
+            compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0.01f),
         )
     }
 }
