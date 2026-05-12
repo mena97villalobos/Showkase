@@ -1,0 +1,131 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-bump:
+        description: 'Semver part to bump from the latest v*.*.* tag'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+  push:
+    branches: [ master, main ]
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: Cache Gradle dependencies
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Determine next version
+        id: version
+        run: |
+          set -euo pipefail
+          BUMP="${{ github.event.inputs.version-bump || 'patch' }}"
+          LATEST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)
+          if [ -z "$LATEST_TAG" ]; then
+            PREVIOUS_TAG=""
+            MAJOR=0; MINOR=0; PATCH=0
+            echo "No existing v*.*.* tag found, starting from v0.0.0"
+          else
+            PREVIOUS_TAG="$LATEST_TAG"
+            VERSION="${LATEST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          fi
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+            *) echo "Unknown bump type: $BUMP"; exit 1 ;;
+          esac
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          NEW_TAG="v${NEW_VERSION}"
+          echo "Previous tag: ${PREVIOUS_TAG:-<none>}"
+          echo "New version:  $NEW_VERSION"
+          echo "previous-tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+          echo "new-version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "new-tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew \
+            :showkase:publishAllPublicationsToGitHubPackagesRepository \
+            :showkase-annotation:publishAllPublicationsToGitHubPackagesRepository \
+            :showkase-models:publishAllPublicationsToGitHubPackagesRepository \
+            :showkase-processor:publishAllPublicationsToGitHubPackagesRepository \
+            :showkase-screenshot-testing:publishAllPublicationsToGitHubPackagesRepository \
+            :showkase-screenshot-testing-shot:publishAllPublicationsToGitHubPackagesRepository \
+            :showkase-screenshot-testing-roborazzi:publishAllPublicationsToGitHubPackagesRepository \
+            -PVERSION_NAME=${{ steps.version.outputs.new-version }} \
+            -PRELEASE_SIGNING_ENABLED=false \
+            --stacktrace
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          set -euo pipefail
+          PREV_TAG="${{ steps.version.outputs.previous-tag }}"
+          NEW_TAG="${{ steps.version.outputs.new-tag }}"
+          NOTES_FILE="$(mktemp)"
+          {
+            echo "## What's Changed"
+            echo
+            if [ -z "$PREV_TAG" ]; then
+              git log --no-merges --pretty=format:"- %s (%h) by @%an" HEAD
+            else
+              git log --no-merges --pretty=format:"- %s (%h) by @%an" "${PREV_TAG}..HEAD"
+            fi
+            echo
+            echo
+            if [ -n "$PREV_TAG" ]; then
+              echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${NEW_TAG}"
+            fi
+          } > "$NOTES_FILE"
+          echo "notes-file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+          echo "----- generated notes -----"
+          cat "$NOTES_FILE"
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.new-tag }}" -m "Release ${{ steps.version.outputs.new-tag }}"
+          git push origin "${{ steps.version.outputs.new-tag }}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.new-tag }}" \
+            --title "${{ steps.version.outputs.new-tag }}" \
+            --notes-file "${{ steps.notes.outputs.notes-file }}" \
+            --target "${{ github.sha }}"
