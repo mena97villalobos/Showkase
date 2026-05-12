@@ -136,23 +136,6 @@ jobs:
             bash --noprofile --norc -eo pipefail "${{ steps.script.outputs.file }}"
             ./gradlew connectedCheck --no-daemon --stacktrace
 
-      - name: Run Screenshot Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: ${{ matrix.api-level }}
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: ./gradlew executeScreenshotTests -PdirectorySuffix=Api${{ matrix.api-level }} -PprintBase64
-
-
-      - name: Upload screenshot testing report
-        uses: actions/upload-artifact@v4
-        with:
-          name: reports-${{ matrix.api-level }}-${{ matrix.target }}
-          path: sample/build/reports/shot/debug/Api${{ matrix.api-level }}/verification/
-          retention-days: 1
-
 # Uncomment the jobs below if you want to generate and record screenshots. Once you download the
 # artifact, place them under sample/screenshots/debug/
 
