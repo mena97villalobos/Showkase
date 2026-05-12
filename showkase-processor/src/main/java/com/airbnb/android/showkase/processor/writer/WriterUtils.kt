@@ -101,6 +101,7 @@ internal fun ClassName.getCodegenMetadataParameterizedList() = List::class
     .asClassName()
     .parameterizedBy(this)
 
+@Suppress("LongMethod")
 internal fun CodeBlock.Builder.addShowkaseBrowserComponent(
     showkaseMetadata: ShowkaseMetadata.Component,
     isPreviewParameter: Boolean = false

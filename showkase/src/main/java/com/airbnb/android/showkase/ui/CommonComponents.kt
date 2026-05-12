@@ -19,7 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -120,11 +120,10 @@ internal fun DialogAwareComponent(metadata: ShowkaseBrowserComponent) {
         return
     }
     var show by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val showLabel = metadata.dialogButtonText
-        .ifEmpty { context.getString(R.string.showkase_browser_show_dialog) }
+        .ifEmpty { stringResource(R.string.showkase_browser_show_dialog) }
     val hideLabel = metadata.dialogHideButtonText
-        .ifEmpty { context.getString(R.string.showkase_browser_hide_dialog) }
+        .ifEmpty { stringResource(R.string.showkase_browser_hide_dialog) }
     Button(onClick = { show = !show }) {
         Text(text = if (show) hideLabel else showLabel)
     }
