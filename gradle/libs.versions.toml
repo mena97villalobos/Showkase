@@ -12,7 +12,9 @@ composeActivity = "1.13.0"
 composeConstraintLayout = "1.1.1"
 composeMaterial3 = "1.4.0"
 composeMaterialIcons = "1.7.8"
+composeMultiplatform = "1.9.3"
 composeNavigation = "2.9.8"
+composeNavigationCMP = "2.9.2"
 corektx = "1.18.0"
 detekt = "1.23.8"
 googleTruth = "1.4.5"
@@ -35,6 +37,7 @@ testRunner = "1.7.0"
 # Compose
 compose-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "composeActivity" }
 compose-composeNavigation = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
+compose-navigation-cmp = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "composeNavigationCMP" }
 compose-composeRuntime = { module = "androidx.compose.runtime:runtime", version.ref = "compose" }
 compose-constraintLayout = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "composeConstraintLayout" }
 compose-core = { module = "androidx.compose.ui:ui", version.ref = "compose" }
@@ -92,9 +95,12 @@ detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }

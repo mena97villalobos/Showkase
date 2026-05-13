@@ -13,10 +13,10 @@ import com.airbnb.android.showkase.processor.ShowkaseProcessor.Companion.PREVIEW
 import com.airbnb.android.showkase.processor.exceptions.ShowkaseProcessorException
 import com.airbnb.android.showkase.processor.logging.ShowkaseValidator
 import com.airbnb.android.showkase.processor.utils.annotationDeclaration
+import com.airbnb.android.showkase.processor.utils.argByNameOrNull
 import com.airbnb.android.showkase.processor.utils.findAnnotationBySimpleName
 import com.airbnb.android.showkase.processor.utils.getAnnotation
 import com.airbnb.android.showkase.processor.utils.getAnnotations
-import com.airbnb.android.showkase.processor.utils.getAsAnnotation
 import com.airbnb.android.showkase.processor.utils.getAsBoolean
 import com.airbnb.android.showkase.processor.utils.getAsEnum
 import com.airbnb.android.showkase.processor.utils.getAsInt
@@ -241,8 +241,12 @@ internal fun getShowkaseDialogMetadata(
 }
 
 private fun screenshotConfigFrom(annotation: KSAnnotation): ScreenshotConfig {
-    val screenshotCaptureConfig =
-        annotation.getAsAnnotation(ShowkaseComposable::screenshotCaptureConfig.name)
+    // KSP on Kotlin/Native does not populate nested-annotation default arguments. If the
+    // annotation was used without explicitly supplying `screenshotCaptureConfig = …`, fall back
+    // to the declared default of `ScreenshotConfig.SingleStaticImage`.
+    val screenshotCaptureConfig = annotation.argByNameOrNull(
+        ShowkaseComposable::screenshotCaptureConfig.name
+    ) as? KSAnnotation ?: return ScreenshotConfig.SingleStaticImage
     val screenshotCaptureType = ScreenshotCaptureType.valueOf(
         screenshotCaptureConfig.getAsEnum<ScreenshotCaptureType>(ScreenshotCaptureConfig::type.name).name
     )

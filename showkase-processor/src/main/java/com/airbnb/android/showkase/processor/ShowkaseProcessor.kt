@@ -615,11 +615,16 @@ class ShowkaseProcessor(
             )
         }
 
+        val target = when (options["showkase.target"]?.lowercase()) {
+            "common" -> ShowkaseExtensionFunctionsWriter.Target.COMMON
+            else -> ShowkaseExtensionFunctionsWriter.Target.ANDROID
+        }
         ShowkaseExtensionFunctionsWriter(codeGenerator).apply {
             generateShowkaseExtensionFunctions(
                 rootModulePackageName = rootModulePackageName,
                 rootModuleClassName = rootModuleClassName,
-                rootElement = rootElement
+                rootElement = rootElement,
+                target = target,
             )
         }
     }

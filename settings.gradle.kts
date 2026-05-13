@@ -31,4 +31,6 @@ include(
     ":showkase-screenshot-testing-shot",
     ":showkase-screenshot-testing-roborazzi",
     ":showkase-screenshot-testing-roborazzi-sample",
+    ":sample-desktop",
+    ":sample-ios",
 )

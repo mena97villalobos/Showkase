@@ -16,7 +16,9 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.vanniktech.mavenPublish)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.compose.multiplatform) apply false
 }
 
 subprojects {

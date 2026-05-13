@@ -13,28 +13,40 @@ import com.squareup.kotlinpoet.ksp.writeTo
 internal class ShowkaseExtensionFunctionsWriter(
     private val codeGenerator: CodeGenerator
 ) {
+    enum class Target { ANDROID, COMMON }
+
     internal fun generateShowkaseExtensionFunctions(
         rootModulePackageName: String,
         rootModuleClassName: String,
-        rootElement: KSClassDeclaration
+        rootElement: KSClassDeclaration,
+        target: Target = Target.ANDROID,
     ) {
-        val fileBuilder = getFileBuilder(
-            rootModulePackageName,
-            "${rootModuleClassName}$SHOWKASE_METHODS_SUFFIX"
-        )
-            .addFunction(
-                generateIntentFunction(
-                    rootModulePackageName,
-                    rootModuleClassName,
-                    rootElement
+        val fileName = when (target) {
+            Target.ANDROID -> "${rootModuleClassName}$SHOWKASE_METHODS_SUFFIX"
+            Target.COMMON -> "${rootModuleClassName}$COMMON_SHOWKASE_METHODS_SUFFIX"
+        }
+        val fileBuilder = getFileBuilder(rootModulePackageName, fileName).apply {
+            if (target == Target.ANDROID) {
+                addFunction(
+                    generateIntentFunction(
+                        rootModulePackageName,
+                        rootModuleClassName,
+                        rootElement
+                    )
                 )
-            )
-            .addFunction(
+            }
+            addFunction(
                 generateMetadataFunction(
-                    rootElement,
-                    "$rootModulePackageName.$rootModuleClassName"
+                    rootElement = rootElement,
+                    classKey = "$rootModulePackageName.$rootModuleClassName",
+                    codegenClassName = ClassName(
+                        rootModulePackageName,
+                        "${rootModuleClassName}Codegen"
+                    ),
+                    target = target,
                 )
             )
+        }
 
         rootElement.containingFile?.let { fileBuilder.addFileComment("").build() }
         val built = fileBuilder.build()
@@ -81,37 +93,55 @@ internal class ShowkaseExtensionFunctionsWriter(
 
     private fun generateMetadataFunction(
         rootElement: KSClassDeclaration,
-        classKey: String
+        classKey: String,
+        codegenClassName: ClassName,
+        target: Target,
     ) = FunSpec.builder(METADATA_FUNCTION_NAME).apply {
-        val errorMessage = "The class wasn't generated correctly. Make sure that you have setup " +
-                "Showkase correctly by following the steps here - " +
-                "https://github.com/airbnb/Showkase#Installation."
         receiver(SHOWKASE_OBJECT_CLASS_NAME)
         returns(SHOWKASE_ELEMENTS_METADATA_CLASS_NAME)
         addKdoc("Helper function that's give's you access to Showkase metadata. This contains " +
                 "data about the composables, colors and typography in your codebase that's " +
                 "rendered in showkase.")
-        addCode(
-            CodeBlock.Builder()
-                .indent()
-                .addStatement("try {")
-                .indent()
-                .addStatement(
-                    "val showkaseComponentProvider = Class.forName(\"${classKey}Codegen\")\n\t" +
-                            ".getDeclaredConstructor()\n\t" +
-                            ".newInstance() as %T",
-                    SHOWKASE_PROVIDER_CLASS_NAME
+        when (target) {
+            Target.ANDROID -> {
+                val errorMessage =
+                    "The class wasn't generated correctly. Make sure that you have " +
+                            "setup Showkase correctly by following the steps here - " +
+                            "https://github.com/airbnb/Showkase#Installation."
+                addCode(
+                    CodeBlock.Builder()
+                        .indent()
+                        .addStatement("try {")
+                        .indent()
+                        .addStatement(
+                            "val showkaseComponentProvider = Class.forName(\"${classKey}Codegen\")\n\t" +
+                                    ".getDeclaredConstructor()\n\t" +
+                                    ".newInstance() as %T",
+                            SHOWKASE_PROVIDER_CLASS_NAME
+                        )
+                        .addStatement("return %L.metadata()", "showkaseComponentProvider")
+                        .unindent()
+                        .addStatement("} catch(exception: ClassNotFoundException) {")
+                        .indent()
+                        .addStatement("error(%S)", errorMessage)
+                        .unindent()
+                        .addStatement("}")
+                        .unindent()
+                        .build()
                 )
-                .addStatement("return %L.metadata()", "showkaseComponentProvider")
-                .unindent()
-                .addStatement("} catch(exception: ClassNotFoundException) {")
-                .indent()
-                .addStatement("error(%S)", errorMessage)
-                .unindent()
-                .addStatement("}")
-                .unindent()
-                .build()
-        )
+            }
+
+            Target.COMMON -> {
+                // Generated codegen class lives in the same package — call its constructor
+                // directly. This avoids JVM-only reflection so the helper compiles on
+                // Kotlin/Native targets.
+                addCode(
+                    CodeBlock.builder()
+                        .addStatement("return %T().metadata()", codegenClassName)
+                        .build()
+                )
+            }
+        }
         rootElement.containingFile?.let { addOriginatingKSFile(it) }
     }
         .build()
@@ -122,6 +152,8 @@ internal class ShowkaseExtensionFunctionsWriter(
         private const val METADATA_FUNCTION_NAME = "getMetadata"
         private const val SHOWKASE_EXTENSION_FUNCTIONS_NAME = "ShowkaseExtensionFunctions"
         private const val SHOWKASE_METHODS_SUFFIX = "${SHOWKASE_EXTENSION_FUNCTIONS_NAME}Codegen"
+        private const val COMMON_SHOWKASE_METHODS_SUFFIX =
+            "Common${SHOWKASE_EXTENSION_FUNCTIONS_NAME}Codegen"
         private const val CONTEXT_PARAMETER_NAME = "context"
         private const val CONTEXT_PACKAGE_NAME = "android.content"
         internal val CONTEXT_CLASS_NAME =

@@ -22,11 +22,20 @@ internal fun KSAnnotation.argByName(name: String): Any =
         "Annotation @${shortName.asString()} is missing required argument '$name'"
     )
 
-internal fun KSAnnotation.getAsString(name: String): String = argByName(name) as String
+// KSP on Kotlin/Native does not surface annotation default arguments via [defaultArguments]
+// (only KSP on JVM does). When an argument is absent from both [arguments] and [defaultArguments],
+// these helpers fall back to the annotation's own declared default ("", 0, false) rather than
+// throwing — every Showkase annotation parameter that flows through these helpers declares such a
+// default. If a future annotation parameter does not, the explicit call sites should fail later
+// with a clearer message.
+internal fun KSAnnotation.getAsString(name: String): String =
+    argByNameOrNull(name) as? String ?: ""
 
-internal fun KSAnnotation.getAsInt(name: String): Int = argByName(name) as Int
+internal fun KSAnnotation.getAsInt(name: String): Int =
+    argByNameOrNull(name) as? Int ?: 0
 
-internal fun KSAnnotation.getAsBoolean(name: String): Boolean = argByName(name) as Boolean
+internal fun KSAnnotation.getAsBoolean(name: String): Boolean =
+    argByNameOrNull(name) as? Boolean ?: false
 
 @Suppress("UNCHECKED_CAST")
 internal fun KSAnnotation.getAsStringList(name: String): List<String> {
@@ -64,8 +73,7 @@ internal fun KSAnnotation.getAsTypeList(name: String): List<KSType> {
 }
 
 internal inline fun <reified E : Enum<E>> KSAnnotation.getAsEnum(name: String): E {
-    val value = argByName(name)
-    val entryName = when (value) {
+    val entryName = when (val value = argByName(name)) {
         is KSType -> value.declaration.simpleName.asString()
         is KSClassDeclaration -> value.simpleName.asString()
         else -> value.toString()
